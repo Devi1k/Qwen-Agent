@@ -143,14 +143,11 @@ class Turn(BaseModelCompatibleDict):
         return f'Turn({self.model_dump()})'
 
 
-class Session(BaseModelCompatibleDict):
+class Session:
     turns: List[Turn]
 
     def __init__(self, turns: List[Turn]):
-        super().__init__(turns=turns)
-
-    def __repr__(self):
-        return f'Session({self.model_dump()})'
+        self.turns = turns
 
     def add_turn(self, turn: Turn):
         self.turns.append(turn)

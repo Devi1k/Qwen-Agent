@@ -64,9 +64,11 @@ class WealthyConsultant(Agent):
 
         # yield final result and add result to session assistant message
 
+        turn.assistant_output = skill_res.content
         self.session.add_turn(turn)
 
         print(self.session)
+        yield [skill_res]
 
     def _detect_tool(self, message: Message) -> Tuple[bool, str, str, str]:
         """A built-in tool call detection for func_call format message.

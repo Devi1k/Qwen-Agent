@@ -36,3 +36,5 @@ examples/*.ipynb
 **/workspace/*
 test/*
 tests/env.sh
+
+assets/beauti.json

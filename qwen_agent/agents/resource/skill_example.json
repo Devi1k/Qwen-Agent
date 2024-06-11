@@ -1,0 +1,31 @@
+{
+    "我最近怎么亏了这么多": [
+        {
+            "name": "get_account_info",
+            "parameters": {
+                "cstno": 62121206326456862,
+                "cstname": "张三",
+                "ctfno": 11010120912085089124
+            }
+        }
+    ],
+    "我持仓的基金最近表现怎样": [
+        {
+            "name": "get_account_info",
+            "parameters": {
+                "cstno": 62121206326456862,
+                "cstname": "张三",
+                "ctfno": 11010120912085089124
+            }
+        }
+    ],
+    "帮我推荐一只股票": [
+        {
+            "name": "call_recommendation",
+            "parameters": {
+                "recomm_type": "股票"
+            }
+        }
+    ],
+    "葛兰管理的基金都有哪些": []
+}
