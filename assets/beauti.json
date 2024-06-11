@@ -1,0 +1,38 @@
+{
+    'turns': [
+        {
+            'role': 'user',
+            'content': '五一旅游大火应该买什么股票'
+        },
+        {
+            'role': 'skill_rec',
+            'content': '{\n    "function_call": [\n        {\n            "name": "call_recommendation",\n            "parameters": {\n                "recomm_type": "股票",\n                "keywords": "五一旅游"\n            }\n        }\n    ]\n}'
+        },
+        {
+            'role': 'function',
+            'content': 'Tool call_recommendation does not exists.',
+            'name': 'call_recommendation'
+        },
+        {
+            'role': 'user',
+            'content': '我买的基金赎回时间'
+        },
+        {
+            'role': 'skill_rec',
+            'content': '在基金领域，赎回时间通常与基金的交易规则有关，例如赎回申请通常在交易日结束前提交，赎回的处理和资金到账时间可能依据基金公司和具体产品有所不同。但是，作为一个意图分析工具，我们并不直接提供查询具体基金赎回时间的功能。用户需要查看具体的基金合同或通过基金销售平台获取这类信息。\n\n因此，解析结果为：\n```json\n{\n    "thought": "用户询问的是基金的赎回时间，这通常需要查阅基金的具体条款或通过相关金融平台查询，系统不直接提供此功能。",\n    "function_call": []\n}\n```'
+        },
+        {
+            'role': 'user',
+            'content': '最近有什么债基可以买，代替银行理财'
+        },
+        {
+            'role': 'skill_rec',
+            'content': '{\n    "function_call": [\n        {"name": "call_recommendation", "parameters": {"recomm_type": "基金", "keywords": "债基"}}\n    ]\n}'
+        },
+        {
+            'role': 'function',
+            'content': 'Tool call_recommendation does not exists.',
+            'name': 'call_recommendation'
+        }
+    ]
+}
