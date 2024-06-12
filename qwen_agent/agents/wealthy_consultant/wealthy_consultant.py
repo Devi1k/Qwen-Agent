@@ -3,7 +3,7 @@ import json
 import re
 import traceback
 from typing import Dict, Iterator, List, Optional, Union, Tuple
-
+import os
 import json5
 
 from qwen_agent import Agent
@@ -53,22 +53,31 @@ class WealthyConsultant(Agent):
         # detect and call tools
 
         use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res)
-        # if use_tool:
-        #     tool_result = self._call_tool(tool_name, tool_args, messages=messages, **kwargs)
+        if use_tool:
+            clarify_flag, tool_result = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
+                                                     session=self.session,
+                                                     **kwargs)
         # else:
         #     # todo: process no tool res
         #     pass
 
         # # add tools result to session
-        # turn.tool_res = {tool_name: tool_result}
-
+        turn.tool_res = {tool_name: tool_result}
         # yield final result and add result to session assistant message
+        if clarify_flag:
+            turn.assistant_output = tool_result
+            tmp_res = ""
+            for t in tool_result:
+                tmp_res += t
+                yield [Message(role="assistant", content=tmp_res)]
+            return
+        else:
+            # todo: call llm for summarize
+            turn.assistant_output = skill_res.content
 
-        turn.assistant_output = skill_res.content
+            pass
         self.session.add_turn(turn)
 
-        print(self.session)
-        yield [skill_res]
 
     def _detect_tool(self, message: Message) -> Tuple[bool, str, str, str]:
         """A built-in tool call detection for func_call format message.
@@ -94,14 +103,13 @@ class WealthyConsultant(Agent):
             content = re.findall(pattern, content, re.DOTALL)[0]
         func = json5.loads(content)["function_call"]
         if func:
-            function = FunctionCall(name=func[0]["name"], arguments=json.dumps(func[0]["parameters"]))
+            func_name, func_args = func[0]["name"], func[0]["parameters"]
         else:
-            function = FunctionCall(name="", arguments="[]")
-
-        if message.function_call:
-            # func_call = function
-            func_name = function.name
-            func_args = function.arguments
+            func_name, func_args = "", []
+        # if message.function_call:
+        #     # func_call = function
+        #     func_name = function.name
+        #     func_args = function.arguments
         text = message.content
         if not text:
             text = ''

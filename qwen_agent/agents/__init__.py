@@ -19,7 +19,6 @@ from .write_from_scratch import WriteFromScratch
 
 __all__ = [
     'Agent',
-    'MultiAgentHub',
     'DocQAAgent',
     'Assistant',
     'ArticleAgent',

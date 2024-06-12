@@ -151,3 +151,11 @@ class Session:
 
     def add_turn(self, turn: Turn):
         self.turns.append(turn)
+
+
+    def get_history(self):
+        # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
+        history_str = ""
+        for turn in self.turns[-3:]:
+            history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
+        return history_str

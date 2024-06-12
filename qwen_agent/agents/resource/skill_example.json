@@ -27,5 +27,28 @@
             }
         }
     ],
-    "葛兰管理的基金都有哪些": []
+    "葛兰管理的基金都有哪些": [
+        {
+            "name": "get_product_info",
+            "parameters": {
+                "product_type": "基金",
+                "field_type": "",
+                "product_name": "",
+                "product_id": "",
+                "product_manager": "葛兰"
+            }
+        }
+    ],
+    "华安这个基金最近表现什么样": [
+        {
+            "name": "get_product_info",
+            "parameters": {
+                "product_type": "基金",
+                "field_type": "收益查询",
+                "product_name": "华安",
+                "product_id": "",
+                "product_manager": ""
+            }
+        }
+    ]
 }

@@ -38,3 +38,6 @@ test/*
 tests/env.sh
 
 assets/beauti.json
+
+qwen_agent/tools/resource/acge_text_embedding/*
+qwen_agent/tools/resource/all_product_embedding.index

@@ -1,5 +1,5 @@
 from qwen_agent.tools.search_tools import FrontPageSearch, HybridSearch, KeywordSearch, VectorSearch
-from qwen_agent.tools.wealthy_consultant import GetAccountInfo
+from qwen_agent.tools.wealthy_consultant import GetAccountInfo, GetProductInfo
 
 from .amap_weather import AmapWeather
 from .base import TOOL_REGISTRY, BaseTool
@@ -28,5 +28,6 @@ __all__ = [
     'HybridSearch',
     'FrontPageSearch',
     'ExtractDocVocabulary',
-    'GetAccountInfo'
+    'GetAccountInfo',
+    'GetProductInfo'
 ]

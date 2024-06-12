@@ -98,7 +98,6 @@ class Agent(ABC):
             else:
                 yield [x.model_dump() if not isinstance(x, dict) else x for x in rsp]
 
-
     @abstractmethod
     def _run(self, messages: List[Message], sessions=None, lang: str = 'en', **kwargs) -> Iterator[
         List[Message]]:
@@ -155,7 +154,7 @@ class Agent(ABC):
                                  new_generate_cfg=extra_generate_cfg,
                              ))
 
-    def _call_tool(self, tool_name: str, tool_args: Union[str, dict] = '{}', **kwargs) -> str:
+    def _call_tool(self, tool_name: str, tool_args: Union[str, dict] = '{}', **kwargs) -> Tuple[bool, str]:
         """The interface of calling tools for the agent.
 
         Args:
@@ -163,13 +162,14 @@ class Agent(ABC):
             tool_args: Model generated or user given tool parameters.
 
         Returns:
+            Whether to return the result directly (clarify flag)
             The output of tools.
         """
         if tool_name not in self.function_map:
             return f'Tool {tool_name} does not exists.'
         tool = self.function_map[tool_name]
         try:
-            tool_result = tool.call(tool_args, **kwargs)
+            clarify_flag, tool_result = tool.call(tool_args, **kwargs)
         except Exception as ex:
             exception_type = type(ex).__name__
             exception_message = str(ex)
@@ -178,12 +178,12 @@ class Agent(ABC):
                             f'{exception_type}: {exception_message}\n' \
                             f'Traceback:\n{traceback_info}'
             logger.warning(error_message)
-            return error_message
+            return False, error_message
 
         if isinstance(tool_result, str):
-            return tool_result
+            return clarify_flag, tool_result
         else:
-            return json.dumps(tool_result, ensure_ascii=False, indent=4)
+            return clarify_flag, json.dumps(tool_result, ensure_ascii=False, indent=4)
 
     def _init_tool(self, tool: Union[str, Dict, BaseTool]):
         if isinstance(tool, BaseTool):
