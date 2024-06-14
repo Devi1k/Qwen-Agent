@@ -14,7 +14,8 @@ from qwen_agent.tools.base import BaseTool, register_tool
 from qwen_agent.llm.schema import SYSTEM
 from qwen_agent.utils.str_processing import rm_json_md
 
-ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resource')
+ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'agents/resource')
+
 PROMPT_TEMPLATE_ZH = """
 ## Role :
 - 你是一个面向基金财富领域的意图分析工具，请分析用户输入信息中基金、基金经理等信息的实体链接结果
@@ -161,18 +162,12 @@ class GetProductInfo(BaseTool):
 
     def __init__(self, cfg: Optional[Dict] = None):
         super().__init__(cfg)
-        import os
 
-        from sentence_transformers import SentenceTransformer
-
-        ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'agents/resource')
-        self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
-        self.embedding_model = SentenceTransformer(self.model_path)
         self.all_product = pd.read_excel(ROOT_RESOURCE + "/基金表.xls", sheet_name=0, header=0)
         if os.path.exists(ROOT_RESOURCE + "/all_product_embedding.index"):
             self.all_product_embedding = faiss.read_index(ROOT_RESOURCE + "/all_product_embedding.index")
         else:
-            self.all_product_embedding = self._build_index(self.embedding_model, self.all_product)
+            self.all_product_embedding = self._build_index(self.all_product)
 
     def _verify_json_format_args(self, params: Union[str, dict]) -> Union[str, dict]:
         """Verify the parameters of the function call"""
@@ -188,7 +183,6 @@ class GetProductInfo(BaseTool):
             return params_json
         except Exception:
             raise ValueError('Parameters cannot be converted to Json Format!')
-
 
     def call(self, params: Union[str, dict], **kwargs) -> ToolResponse:
         # call embedding model for product name
@@ -209,9 +203,13 @@ class GetProductInfo(BaseTool):
         clarify_llm_res = list(kwargs["llm"].chat(messages=messages))[-1][0].content
         if "```" in clarify_llm_res:
             clarify_llm_res = rm_json_md(clarify_llm_res)
+        # todo: check clarify_llm_res list
         clarify_res = json5.loads(clarify_llm_res)
-
-        clarify_flag, clarify_content = clarify_res["是否需要澄清"] == "是", clarify_res["链接结果"]
+        try:
+            clarify_flag, clarify_content = clarify_res["是否需要澄清"] == "是", clarify_res["链接结果"]
+        except Exception as e:
+            print(clarify_res)
+            return ToolResponse(reply=clarify_llm_res)
         # if need clarify Splicing fixed template
         if clarify_flag:
             if candidate_prd:
@@ -229,7 +227,7 @@ class GetProductInfo(BaseTool):
                                 tool_call=ToolCall(action=self.name, description=self.description, action_input=params,
                                                    observation=matching_funds))
 
-    def _build_index(self, model: SentenceTransformer, df: pd.DataFrame) -> faiss.IndexFlat:
+    def _build_index(self, df: pd.DataFrame) -> faiss.IndexFlat:
         """
         构建Faiss索引用于基金名称嵌入的相似性搜索。
 
@@ -243,7 +241,7 @@ class GetProductInfo(BaseTool):
         faiss.Index: 已经训练和填充了基金名称嵌入向量的Faiss索引。
         """
         # 将基金名称转换为嵌入向量
-        all_prd_name_embedding = model.encode(df['基金简称'].tolist(), normalize_embeddings=True)
+        all_prd_name_embedding = self.embedding_model.encode(df['基金简称'].tolist(), normalize_embeddings=True)
         # 获取嵌入向量的维度
         dim = all_prd_name_embedding.shape[-1]
         # 根据嵌入向量的维度创建Faiss索引，使用内积作为度量标准

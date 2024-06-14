@@ -41,3 +41,4 @@ assets/beauti.json
 
 qwen_agent/agents/resource/acge_text_embedding/*
 qwen_agent/agents/resource/all_product_embedding.index
+qwen_agent/agents/resource/faq.index

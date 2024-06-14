@@ -29,7 +29,17 @@ def rm_continuous_placeholders(text):
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text
 
+
 def rm_json_md(text):
     pattern = r'```(?:JSON|json|Json)\s*(.*?)```'
-    clarify_llm_res = re.findall(pattern, text, re.DOTALL)[0]
+    try:
+        clarify_llm_res = re.findall(pattern, text, re.DOTALL)[0]
+    except IndexError as e:
+        pattern_b = r'```\s*(.*?)```'
+        clarify_llm_res = re.findall(pattern_b, text, re.DOTALL)
+        if not clarify_llm_res:
+            print(f"文本：{text} 格式错误 {e} 没有匹配 json 内容")
+            return text
+        else:
+            return clarify_llm_res[0]
     return clarify_llm_res

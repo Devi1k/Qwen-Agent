@@ -151,15 +151,17 @@ class Turn(BaseModelCompatibleDict):
     assistant_output: Optional[str]
     skill_rec: Optional[str] = None
     tool_res: Optional[ToolResponse] = None
+    faq_res: Optional[str] = None
 
     def __init__(self,
                  user_input: Optional[str] = None,
                  assistant_output: Optional[str] = None,
                  skill_rec: Optional[str] = None,
                  tool_res: Optional[Dict] = None,
+                 faq_res: Optional[str] = None,
                  **kwargs):
         super().__init__(user_input=user_input, assistant_output=assistant_output, skill_rec=skill_rec,
-                         tool_res=tool_res)
+                         tool_res=tool_res, faq_res=faq_res)
 
     def __repr__(self):
         return f'Turn: [{self.model_dump()}]'
@@ -189,3 +191,6 @@ class Session:
             assistant_output = "assistant:" + turn.assistant_output + "\n"
             history_str += user + tool_res + assistant_output
         return history_str
+
+    def __repr__(self):
+        return [f"turn {index + 1}:" + turn.__repr__() + "\n" for index, turn in enumerate(self.turns)]
