@@ -9,8 +9,10 @@ import json5
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
 from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, FUNCTION, Session, Turn, SKILL_REC, \
-    FunctionCall
+    FunctionCall, ToolResponse
 from qwen_agent.agents import SkillRecognizer
+from .summarize import Summarizer
+
 from qwen_agent.tools import BaseTool
 from qwen_agent.settings import MAX_LLM_CALL_PER_RUN
 
@@ -35,6 +37,9 @@ class WealthyConsultant(Agent):
         self.skill_rec = SkillRecognizer(llm=self.llm)
         self.session = Session(turns=[])
 
+        self.summarizer = Summarizer(llm=self.llm)
+        # self.summarizer = None
+
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
         if messages[-1].content[0].text.strip() == '':
             raise ValueError("请输入有关信息")
@@ -54,30 +59,30 @@ class WealthyConsultant(Agent):
 
         use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res)
         if use_tool:
-            clarify_flag, tool_result = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
-                                                     session=self.session,
-                                                     **kwargs)
-        # else:
-        #     # todo: process no tool res
-        #     pass
+            tool_response = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
+                                            session=self.session,
+                                            **kwargs)
+        else:
+            tool_response = ToolResponse("no tools used")
 
         # # add tools result to session
-        turn.tool_res = {tool_name: tool_result}
+        turn.tool_res = tool_response
         # yield final result and add result to session assistant message
-        if clarify_flag:
-            turn.assistant_output = tool_result
+        if tool_response.reply != "":
+            turn.assistant_output = tool_response.reply
             tmp_res = ""
-            for t in tool_result:
+            for t in tool_response.reply:
                 tmp_res += t
                 yield [Message(role="assistant", content=tmp_res)]
-            return
         else:
             # todo: call llm for summarize
-            turn.assistant_output = skill_res.content
+            response = []
+            for rsp in self.summarizer.run(messages=messages, sessions=self.session, turn=turn):
+                response += rsp
+                yield rsp
+            turn.assistant_output = response[-1].content
 
-            pass
         self.session.add_turn(turn)
-
 
     def _detect_tool(self, message: Message) -> Tuple[bool, str, str, str]:
         """A built-in tool call detection for func_call format message.

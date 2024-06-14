@@ -124,11 +124,33 @@ class Message(BaseModelCompatibleDict):
         return value
 
 
+class ToolCall(BaseModelCompatibleDict):
+    action: str
+    description: str
+    action_input: Dict
+    observation: List[Dict]
+
+    def __init__(self, action: str, description: str, action_input: Dict, observation: List[Dict]):
+        super().__init__(action=action, description=description, action_input=action_input, observation=observation)
+
+    def __repr__(self):
+        return f'FunctionCallingResult: [{self.model_dump()}]'
+
+
+class ToolResponse(BaseModelCompatibleDict):
+    reply: str
+    tool_call: Optional[ToolCall]
+    card: Optional[Dict]
+
+    def __init__(self, reply: str, tool_call: Optional[ToolCall] = None, card: Optional[Dict] = None):
+        super().__init__(reply=reply, tool_call=tool_call, card=card)
+
+
 class Turn(BaseModelCompatibleDict):
     user_input: str
     assistant_output: Optional[str]
     skill_rec: Optional[str] = None
-    tool_res: Optional[Dict] = None
+    tool_res: Optional[ToolResponse] = None
 
     def __init__(self,
                  user_input: Optional[str] = None,
@@ -140,7 +162,7 @@ class Turn(BaseModelCompatibleDict):
                          tool_res=tool_res)
 
     def __repr__(self):
-        return f'Turn({self.model_dump()})'
+        return f'Turn: [{self.model_dump()}]'
 
 
 class Session:
@@ -152,10 +174,18 @@ class Session:
     def add_turn(self, turn: Turn):
         self.turns.append(turn)
 
-
-    def get_history(self):
+    def get_tmp_history(self):
         # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
-        history_str = ""
+        history_str = "## History:\n"
         for turn in self.turns[-3:]:
             history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
+        return history_str
+
+    def get_whole_history(self):
+        history_str = ""
+        for turn in self.turns[-3:]:
+            user = "user:" + turn.user_input + "\n"
+            tool_res = "tool result:" + "tool_name:" + turn.tool_res.tool_call.__repr__() + "\n"
+            assistant_output = "assistant:" + turn.assistant_output + "\n"
+            history_str += user + tool_res + assistant_output
         return history_str

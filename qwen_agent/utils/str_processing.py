@@ -28,3 +28,8 @@ def rm_continuous_placeholders(text):
     text = re.sub(r'[.\- —。_*]{7,}', '\t', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text
+
+def rm_json_md(text):
+    pattern = r'```(?:JSON|json|Json)\s*(.*?)```'
+    clarify_llm_res = re.findall(pattern, text, re.DOTALL)[0]
+    return clarify_llm_res

@@ -155,7 +155,8 @@ class WebUI:
 
             demo.load(self.chat_clear, None, None, queue=False)
 
-        demo.queue(default_concurrency_limit=concurrency_limit).launch(share=share, server_name=server_name)
+        demo.queue(default_concurrency_limit=concurrency_limit).launch(share=share, server_name=server_name,
+                                                                       server_port=7860)
 
     def change_agent(self, agent_selector):
         yield agent_selector, self._create_agent_info_block(agent_selector), self._create_agent_plugins_block(

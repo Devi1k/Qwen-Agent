@@ -85,7 +85,7 @@ class SkillRecognizer(Agent):
             messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
 
         # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
-        history_str = kwargs["sessions"].get_history()
+        history_str = kwargs["sessions"].get_tmp_history()
         # history_str = ""
         # for turn in kwargs["sessions"].turns[-3:]:
         #     history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"

@@ -9,9 +9,10 @@ import pandas as pd
 import torch
 
 from sentence_transformers import SentenceTransformer
-from qwen_agent.llm.schema import Message
+from qwen_agent.llm.schema import Message, ToolResponse, ToolCall
 from qwen_agent.tools.base import BaseTool, register_tool
 from qwen_agent.llm.schema import SYSTEM
+from qwen_agent.utils.str_processing import rm_json_md
 
 ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resource')
 PROMPT_TEMPLATE_ZH = """
@@ -131,7 +132,7 @@ PROMPT_TEMPLATE = {
 }
 
 
-@register_tool('get_product_info')
+@register_tool('产品查询')
 class GetProductInfo(BaseTool):
     description = '基金/理财产品信息查询'
     parameters = [{
@@ -160,40 +161,73 @@ class GetProductInfo(BaseTool):
 
     def __init__(self, cfg: Optional[Dict] = None):
         super().__init__(cfg)
+        import os
 
+        from sentence_transformers import SentenceTransformer
+
+        ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'agents/resource')
         self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
         self.embedding_model = SentenceTransformer(self.model_path)
-        self.all_product = pd.read_excel(ROOT_RESOURCE + "/all_product.xlsx", sheet_name=0, header=0)
+        self.all_product = pd.read_excel(ROOT_RESOURCE + "/基金表.xls", sheet_name=0, header=0)
         if os.path.exists(ROOT_RESOURCE + "/all_product_embedding.index"):
             self.all_product_embedding = faiss.read_index(ROOT_RESOURCE + "/all_product_embedding.index")
         else:
             self.all_product_embedding = self._build_index(self.embedding_model, self.all_product)
 
-    def call(self, params: Union[str, dict], **kwargs) -> str:
+    def _verify_json_format_args(self, params: Union[str, dict]) -> Union[str, dict]:
+        """Verify the parameters of the function call"""
+        try:
+            if isinstance(params, str):
+                params_json = json5.loads(params)
+            else:
+                params_json = params
+            for param in self.parameters:
+                if param['name'] not in params_json:
+                    params_json[param['name']] = ""
+
+            return params_json
+        except Exception:
+            raise ValueError('Parameters cannot be converted to Json Format!')
+
+
+    def call(self, params: Union[str, dict], **kwargs) -> ToolResponse:
         # call embedding model for product name
         params = self._verify_json_format_args(params)
-        prd_name, prd_id = params['product_name'], params['product_id']
+        try:
+            prd_name, prd_id = params['product_name'], params['product_id']
+        except Exception as e:
+            return ToolResponse(reply=f"{e}")
         candidate_prd = self._get_candidate_prd(prd_name, prd_id)
         # get user product info from params
         user_product = {}
 
         # build clarify content
-        user_input = kwargs["session"].get_history() + "user:" + kwargs["messages"][-1].content[0].text
+        user_input = kwargs["session"].get_tmp_history() + "user:" + kwargs["messages"][-1].content[0].text
         messages = self._build_clarify_prompt(user_input=user_input,
                                               candidate_prd=candidate_prd, user_product=user_product)
         # call llm for deciding clarify
         clarify_llm_res = list(kwargs["llm"].chat(messages=messages))[-1][0].content
         if "```" in clarify_llm_res:
-            pattern = r'```(?:JSON|json|Json)\s*(.*?)```'
-            clarify_llm_res = re.findall(pattern, content, re.DOTALL)[0]
+            clarify_llm_res = rm_json_md(clarify_llm_res)
         clarify_res = json5.loads(clarify_llm_res)
+
         clarify_flag, clarify_content = clarify_res["是否需要澄清"] == "是", clarify_res["链接结果"]
         # if need clarify Splicing fixed template
         if clarify_flag:
-            return clarify_flag, "请您确定产品信息: \n" + json.dumps(candidate_prd, ensure_ascii=False, indent=4)
-        # else return product info field at least five fields
+            if candidate_prd:
+                return ToolResponse("请您确定产品信息: \n" + json.dumps(candidate_prd, ensure_ascii=False, indent=4))
+            else:
+                # todo: call recommend
+                pass
+            # else return product info field at least five fields
         else:
-            return clarify_flag, f"产品{clarify_content}信息 + {params['field_type']}"
+            # todo: 根据类型（基金/理财） + 名称区分
+            target_name_list = [cc["name"] for cc in clarify_content]
+            matching_funds = [candi for candi in candidate_prd if candi["基金简称"] in target_name_list]
+
+            return ToolResponse(reply="",
+                                tool_call=ToolCall(action=self.name, description=self.description, action_input=params,
+                                                   observation=matching_funds))
 
     def _build_index(self, model: SentenceTransformer, df: pd.DataFrame) -> faiss.IndexFlat:
         """
@@ -209,7 +243,7 @@ class GetProductInfo(BaseTool):
         faiss.Index: 已经训练和填充了基金名称嵌入向量的Faiss索引。
         """
         # 将基金名称转换为嵌入向量
-        all_prd_name_embedding = model.encode(df['产品名称'].tolist(), normalize_embeddings=True)
+        all_prd_name_embedding = model.encode(df['基金简称'].tolist(), normalize_embeddings=True)
         # 获取嵌入向量的维度
         dim = all_prd_name_embedding.shape[-1]
         # 根据嵌入向量的维度创建Faiss索引，使用内积作为度量标准
@@ -225,16 +259,16 @@ class GetProductInfo(BaseTool):
         return faiss_index
 
     def _get_candidate_prd(self, prd_name: str, prd_id: str) -> Dict:
-        if prd_id in self.all_product['产品ID'].tolist():
-            prd_index = self.all_product['产品ID'].tolist().index(prd_id)
+        if prd_id in self.all_product['基金编码'].tolist():
+            prd_index_res = self.all_product['基金编码'].tolist().index(prd_id)
         # model encode product name and calculate cosine similarity with all product name for top 10
         else:
             prd_name_embedding = self.embedding_model.encode(prd_name, normalize_embeddings=True).reshape(1, -1)
             score, prd_index = self.all_product_embedding.search(prd_name_embedding.astype(np.float32), k=5)
-            prd_index = prd_index[score > 0.6]
+            prd_index_res = prd_index[score > 0.6]
         candidate_prd = {}
-        if len(prd_index) != 0:
-            candidate_prd = self.all_product.iloc[prd_index].to_dict(orient="records")
+        if len(prd_index_res) != 0:
+            candidate_prd = self.all_product.iloc[prd_index_res].to_dict(orient="records")
         return candidate_prd
 
     def _build_clarify_prompt(self, user_input: str, candidate_prd: Dict, user_product: Dict) -> List[Message]:

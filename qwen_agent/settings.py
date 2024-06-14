@@ -15,3 +15,4 @@ DEFAULT_PARSER_PAGE_SIZE: int = 500  # Max tokens per chunk when doing RAG
 DEFAULT_RAG_KEYGEN_STRATEGY: Literal['None', 'GenKeyword', 'SplitQueryThenGenKeyword', 'GenKeywordWithKnowledge',
                                      'SplitQueryThenGenKeywordWithKnowledge'] = 'SplitQueryThenGenKeyword'
 DEFAULT_RAG_SEARCHERS: List[str] = ['keyword_search', 'vector_search']  # Sub-searchers for hybrid retrieval
+DEFAULT_FAQ_SEARCHERS: List[str] = ['faq_embedding']

@@ -6,7 +6,8 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from qwen_agent.llm import get_chat_model
 from qwen_agent.llm.base import BaseChatModel
-from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, ROLE, SYSTEM, ContentItem, Message, Session
+from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, ROLE, SYSTEM, ContentItem, Message, Session, \
+    ToolResponse
 from qwen_agent.log import logger
 from qwen_agent.tools import TOOL_REGISTRY, BaseTool
 from qwen_agent.utils.utils import has_chinese_messages, merge_generate_cfgs
@@ -99,8 +100,8 @@ class Agent(ABC):
                 yield [x.model_dump() if not isinstance(x, dict) else x for x in rsp]
 
     @abstractmethod
-    def _run(self, messages: List[Message], sessions=None, lang: str = 'en', **kwargs) -> Iterator[
-        List[Message]]:
+    def _run(self, messages: List[Message], sessions=None, lang: str = 'en', **kwargs) -> \
+    Iterator[List[Message]]:
         """Return one response generator based on the received messages.
 
         The workflow for an agent to generate a reply.
@@ -154,7 +155,7 @@ class Agent(ABC):
                                  new_generate_cfg=extra_generate_cfg,
                              ))
 
-    def _call_tool(self, tool_name: str, tool_args: Union[str, dict] = '{}', **kwargs) -> Tuple[bool, str]:
+    def _call_tool(self, tool_name: str, tool_args: Union[str, dict] = '{}', **kwargs) -> ToolResponse:
         """The interface of calling tools for the agent.
 
         Args:
@@ -166,10 +167,10 @@ class Agent(ABC):
             The output of tools.
         """
         if tool_name not in self.function_map:
-            return f'Tool {tool_name} does not exists.'
+            return ToolResponse(f'Tool {tool_name} does not exists.')
         tool = self.function_map[tool_name]
         try:
-            clarify_flag, tool_result = tool.call(tool_args, **kwargs)
+            tool_result = tool.call(tool_args, **kwargs)
         except Exception as ex:
             exception_type = type(ex).__name__
             exception_message = str(ex)
@@ -178,12 +179,13 @@ class Agent(ABC):
                             f'{exception_type}: {exception_message}\n' \
                             f'Traceback:\n{traceback_info}'
             logger.warning(error_message)
-            return False, error_message
+            return ToolResponse(error_message)
 
-        if isinstance(tool_result, str):
-            return clarify_flag, tool_result
-        else:
-            return clarify_flag, json.dumps(tool_result, ensure_ascii=False, indent=4)
+        return tool_result
+        # if isinstance(tool_result, str):
+        #     return clarify_flag, tool_result
+        # else:
+        #     return clarify_flag, json.dumps(tool_result, ensure_ascii=False, indent=4)
 
     def _init_tool(self, tool: Union[str, Dict, BaseTool]):
         if isinstance(tool, BaseTool):

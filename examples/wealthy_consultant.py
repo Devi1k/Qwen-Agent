@@ -1,20 +1,51 @@
-from qwen_agent.agents import WealthyConsultant
 import os
+
+from qwen_agent.agents import WealthyConsultant
+from qwen_agent.gui import WebUI
+
 
 def wealthy_consultant():
     llm_cfg = {'model': 'qwen2-72b-instruct', 'model_server': 'dashscope',
                "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160"}
 
-    bot = WealthyConsultant(llm=llm_cfg, function_list=["get_account_info", "get_product_info"])
+    tool_list = ["产品查询"]
+    bot = WealthyConsultant(llm=llm_cfg,
+                            name="财顾小信",
+                            description="我是一个财富顾问，我能了解你的投资情况，帮你分析当下市场状况、产品信息。",
+                            function_list=tool_list)
 
     while True:
         query = input("请输入查询内容：")
         if query == "exit":
             break
         messages = [{'role': 'user', 'content': [{'text': query}]}]
-        print(list(bot.run(messages)))
+        for rsp in bot.run(messages):
+            print(rsp)
+
+
+def app_gui():
+    llm_cfg = {'model': 'qwen2-72b-instruct', 'model_server': 'dashscope',
+               "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160"}
+
+    tool_list = ["产品查询"]
+    bot = WealthyConsultant(llm=llm_cfg,
+                            name="财顾小信",
+                            description="我是一个财富顾问，我能了解你的投资情况，帮你分析当下市场状况、产品信息。",
+                            function_list=tool_list)
+    chatbot_config = {
+        'prompt.suggestions': [
+            '华宝新兴最近能加仓吗',
+            '安鑫稳评测一下这个产品',
+            '安享惠金的投资风格是什么',
+        ]
+    }
+    WebUI(
+        bot,
+        chatbot_config=chatbot_config,
+    ).run(share=True)
 
 
 if __name__ == '__main__':
-
-    wealthy_consultant()
+    # wealthy_consultant()
+    os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
+    app_gui()

@@ -3,6 +3,7 @@ from qwen_agent.multi_agent_hub import MultiAgentHub
 
 from .wealthy_consultant.skill_recognize import SkillRecognizer
 from .wealthy_consultant.wealthy_consultant import WealthyConsultant
+# from .wealthy_consultant.summarize import Summarizer
 from .article_agent import ArticleAgent
 from .assistant import Assistant
 # DocQAAgent is the default solution for long document question answering.
@@ -31,5 +32,5 @@ __all__ = [
     'GroupChatAutoRouter',
     'FnCallAgent',
     'SkillRecognizer',
-    'WealthyConsultant'
+    'WealthyConsultant',
 ]
