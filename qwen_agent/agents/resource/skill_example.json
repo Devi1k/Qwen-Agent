@@ -19,11 +19,13 @@
             }
         }
     ],
-    "帮我推荐一只股票": [
+    "帮我推荐一只低风险的科技基金": [
         {
             "name": "call_recommendation",
             "parameters": {
-                "recomm_type": "股票"
+                "risk_level": "低风险",
+                "product_style": "",
+                "investment_sector": "科技"
             }
         }
     ],

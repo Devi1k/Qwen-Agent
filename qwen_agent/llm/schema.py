@@ -125,6 +125,12 @@ class Message(BaseModelCompatibleDict):
 
 
 class ToolCall(BaseModelCompatibleDict):
+    """
+        action: 工具名称
+        description: 工具描述
+        action_input: 工具输入
+        observation: 工具输出
+    """
     action: str
     description: str
     action_input: Dict

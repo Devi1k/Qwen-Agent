@@ -10,7 +10,7 @@ import json5
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
 from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, FUNCTION, Session, Turn, SKILL_REC, \
-    FunctionCall, ToolResponse
+    FunctionCall, ToolResponse, ToolCall
 from qwen_agent.agents import SkillRecognizer
 from .faq_agent import FAQAgent
 from .summarize import Summarizer
@@ -52,6 +52,7 @@ class WealthyConsultant(Agent):
         faq_res = list(self.faq_searcher.run(messages=messages, sessions=self.session, lang=lang))[-1][0].content
         turn.faq_res = faq_res
         print(f"faq cost :{time.time() - faq_start}")
+
         # call skill recognizer
         skill_start = time.time()
         skill_res = list(self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
@@ -67,9 +68,11 @@ class WealthyConsultant(Agent):
                                             session=self.session,
                                             **kwargs)
         else:
-            # todo 1: 如果 faq 有结果，不调用工具，则直接出 FAQ 答案
-            # todo 2：工具结果给空串，调用总结
-            tool_response = ToolResponse("")
+            action_input = {"product_style": "", "risk_level": "", "investment_sector": ""}
+            recommend_list = self._call_tool("产品推荐",
+                                             action_input)
+            tool_response = ToolResponse("", ToolCall("产品推荐", "产品推荐", action_input,
+                                                      [{"推荐内容": recommend_list}]))
 
         # # add tools result to session
         turn.tool_res = tool_response

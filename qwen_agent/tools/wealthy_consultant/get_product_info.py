@@ -203,7 +203,6 @@ class GetProductInfo(BaseTool):
         clarify_llm_res = list(kwargs["llm"].chat(messages=messages))[-1][0].content
         if "```" in clarify_llm_res:
             clarify_llm_res = rm_json_md(clarify_llm_res)
-        # todo: check clarify_llm_res list
         clarify_res = json5.loads(clarify_llm_res)
         try:
             clarify_flag, clarify_content = clarify_res["是否需要澄清"] == "是", clarify_res["链接结果"]
