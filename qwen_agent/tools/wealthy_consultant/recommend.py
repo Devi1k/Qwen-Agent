@@ -109,6 +109,13 @@ class Recommend(BaseTool):
                 if risk not in risk_index:
                     risk_index[risk] = []
                 risk_index[risk].append(row['基金简称'])
+        if "" in style_index:
+            style_index = style_index.pop("")
+        if "" in sector_index:
+            del sector_index[""]
+        if "" in risk_index:
+            risk_index = risk_index.pop("")
+
         self.style_index = style_index
         self.sector_index = sector_index
         self.risk_index = risk_index

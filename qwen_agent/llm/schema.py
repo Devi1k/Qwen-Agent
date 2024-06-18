@@ -200,11 +200,10 @@ class Session:
         for turn in self.turns[-3:]:
             user = "user:" + turn.user_input + "\n"
             faq_res = "faq result:\n" + turn.faq_res + "\n"
-            skill_res = "skill result:\n" + turn.skill_rec + "\n"
             tool_res_info = turn.tool_res.tool_call.__repr__() if turn.tool_res.tool_call is not None else turn.tool_res.reply
             tool_res = "tool result:\n" + tool_res_info + "\n"
             assistant_output = "assistant:" + turn.assistant_output + "\n"
-            history_str += user + faq_res + skill_res + tool_res + assistant_output
+            history_str += user + faq_res + tool_res + assistant_output
         return history_str
 
     def __repr__(self):

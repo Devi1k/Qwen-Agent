@@ -70,17 +70,12 @@ class WealthyConsultant(Agent):
         # detect and call tools
         use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res[-1])
         tool_start = time.time()
-        # yield [Message(role=ASSISTANT, content=f"正在调用 {tool_name} 工具...")]
+        tool_response = ToolResponse(reply="", tool_call=None)
+
         if use_tool:
             tool_response = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
                                             session=self.session,
                                             **kwargs)
-        else:
-            action_input = {"product_style": "", "risk_level": "", "investment_sector": ""}
-            recommend_list = self._call_tool("产品推荐",
-                                             action_input)
-            tool_response = ToolResponse("", ToolCall("产品推荐", "产品推荐", action_input,
-                                                      [{"推荐内容": recommend_list}]))
 
         # add tools result to session
         turn.tool_res = tool_response
@@ -125,11 +120,10 @@ class WealthyConsultant(Agent):
         content = message.content
         if "```" in content:
             content = rm_json_md(content)
-        func = [{"name": None, "parameters": None}]
+        func = {"function_call": [{"name": None, "parameters": None}]}
         try:
             func = json5.loads(content)
         except Exception as e:
-            func["function_call"] = [{}]
             print(f"解析json失败: {e} {content}")
         if len(func["function_call"]) != 0:
             func_name, func_args = func["function_call"][0]["name"], func["function_call"][0]["parameters"]

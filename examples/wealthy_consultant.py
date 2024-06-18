@@ -1,9 +1,11 @@
 import os
+from pprint import pprint
 
 from qwen_agent.agents import WealthyConsultant
 from qwen_agent.gui import WebUI
 
-llm_cfg = {'model': 'qwen-plus', 'model_server': 'dashscope',
+# todo: 产品信息字段拼接2
+llm_cfg = {'model': 'qwen1.5-72b-chat', 'model_server': 'dashscope',
            "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160"}
 
 tool_list = ["产品查询", "产品推荐"]
@@ -21,7 +23,7 @@ def wealthy_consultant():
             break
         messages = [{'role': 'user', 'content': [{'text': query}]}]
         for rsp in bot.run(messages):
-            print(rsp)
+            pprint(rsp)
 
 
 def app_gui():
@@ -35,6 +37,7 @@ def app_gui():
             '华宝新兴最近能加仓吗',
             '安鑫稳评测一下这个产品',
             '安享惠金的投资风格是什么',
+            '推荐几个低风险产品'
         ]
     }
     WebUI(
@@ -44,6 +47,6 @@ def app_gui():
 
 
 if __name__ == '__main__':
-    # wealthy_consultant()
-    os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
-    app_gui()
+    wealthy_consultant()
+    # os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
+    # app_gui()

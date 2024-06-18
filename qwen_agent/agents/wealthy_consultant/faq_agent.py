@@ -56,11 +56,6 @@ user: 基金的开放式是指什么，赎回几天能到
 
 """
 
-AVAILABLE_FAQ = """
-{'编号': 1, '问题': '什么是最大回撤比例', '答案': '用于衡量投资产品（如基金、股票、投资组合等）风险的重要指标。它表示在特定时间段内，投资产品从最高点到最低点的最大跌幅，通常用百分比表示。最大回撤比例反映了投资产品在最差情况下可能经历的最大损失。', '参考相似问': ['最大回撤是什么']}
-{'编号': 2, '问题': '开放式基金是什么', '答案': '开放式基金是一种灵活的投资基金类型，其份额数量不是固定的，可以根据投资者的需求进行随时的申购（购买）和赎回（卖出）。', '参考相似问': []}
-{'编号': 3, '问题': '基金赎回一般要多久到账', '答案': '货币市场基金通常T+1日到账，股票型基金、混合型基金、债券型基金一般为T+3日到账，QDII基金（境外投资基金）通常T+7日或更长时间到账', '参考相似问': ['我赎回基金后多久能到']}
-"""
 
 
 class FAQAgent(Agent):
@@ -79,7 +74,11 @@ class FAQAgent(Agent):
         self.session = Session(turns=[])
 
         self.search_objs = [self.function_map[name] for name in function_list]
-
+        self.available_faqs = """
+{'编号': 1, '问题': '什么是最大回撤比例', '答案': '用于衡量投资产品（如基金、股票、投资组合等）风险的重要指标。它表示在特定时间段内，投资产品从最高点到最低点的最大跌幅，通常用百分比表示。最大回撤比例反映了投资产品在最差情况下可能经历的最大损失。', '参考相似问': ['最大回撤是什么']}
+{'编号': 2, '问题': '开放式基金是什么', '答案': '开放式基金是一种灵活的投资基金类型，其份额数量不是固定的，可以根据投资者的需求进行随时的申购（购买）和赎回（卖出）。', '参考相似问': []}
+{'编号': 3, '问题': '基金赎回一般要多久到账', '答案': '货币市场基金通常T+1日到账，股票型基金、混合型基金、债券型基金一般为T+3日到账，QDII基金（境外投资基金）通常T+7日或更长时间到账', '参考相似问': ['我赎回基金后多久能到']}
+"""
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
 
         res_messages = Message(role=ASSISTANT, content="")
@@ -107,7 +106,7 @@ class FAQAgent(Agent):
         except Exception as e:
             faq_json_res["faq"] = ""
             raise ValueError(f"解析json失败: {e}")
-        candidate_faq_dict = {index: a for index, a in enumerate(AVAILABLE_FAQ.strip().split("\n"))}
+        candidate_faq_dict = {index: a for index, a in enumerate(self.candidate_faq_str.strip().split("\n"))}
         try:
             res_messages.content = json5.dumps([candidate_faq_dict[index - 1] for index in faq_json_res["faqs"]],
                                                ensure_ascii=False)
@@ -117,11 +116,10 @@ class FAQAgent(Agent):
 
     def _build_prompt(self, query: str, recall_res_list: List[Dict]) -> List[Message]:
         faq_str = ""
-        global AVAILABLE_FAQ
         for i in range(len(recall_res_list)):
             faq_str += "{" + f"'编号': {i + 4}, '问题': {recall_res_list[i]['标准问']},'答案': {recall_res_list[i]['答案']},'参考相似问': {recall_res_list[i]['相似问']}" + "}\n"
-        AVAILABLE_FAQ += faq_str
+        self.candidate_faq_str = self.available_faqs + faq_str
         user_prompt = "## Input :\nuser: " + query + "\n解析结果为:"
         messages = [Message(**{"role": "user", "content": user_prompt})]
-        messages.insert(0, Message(SYSTEM, SYSTEM_PROMPT.replace("{available_faqs}", AVAILABLE_FAQ)))
+        messages.insert(0, Message(SYSTEM, SYSTEM_PROMPT.replace("{available_faqs}", self.candidate_faq_str)))
         return messages
