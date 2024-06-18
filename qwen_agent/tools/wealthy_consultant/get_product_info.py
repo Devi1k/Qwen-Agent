@@ -162,7 +162,12 @@ class GetProductInfo(BaseTool):
 
     def __init__(self, cfg: Optional[Dict] = None):
         super().__init__(cfg)
+        import os
 
+        from sentence_transformers import SentenceTransformer
+
+        self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
+        self.embedding_model = SentenceTransformer(self.model_path)
         self.all_product = pd.read_excel(ROOT_RESOURCE + "/基金表.xls", sheet_name=0, header=0)
         if os.path.exists(ROOT_RESOURCE + "/all_product_embedding.index"):
             self.all_product_embedding = faiss.read_index(ROOT_RESOURCE + "/all_product_embedding.index")
@@ -240,13 +245,7 @@ class GetProductInfo(BaseTool):
         faiss.Index: 已经训练和填充了基金名称嵌入向量的Faiss索引。
         """
         # 将基金名称转换为嵌入向量
-        import os
 
-        from sentence_transformers import SentenceTransformer
-        ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'agents/resource')
-
-        self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
-        self.embedding_model = SentenceTransformer(self.model_path)
         all_prd_name_embedding = self.embedding_model.encode(df['基金简称'].tolist(), normalize_embeddings=True)
         # 获取嵌入向量的维度
         dim = all_prd_name_embedding.shape[-1]

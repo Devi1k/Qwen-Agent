@@ -18,7 +18,12 @@ class GetFAQ(BaseTool):
     def __init__(self, cfg: Optional[Dict] = None):
         super().__init__(cfg)
         self.recall_set, self.origin_data = self._build_recall_set(ROOT_RESOURCE + "/相似问.xls")
+        import os
 
+        from sentence_transformers import SentenceTransformer
+
+        self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
+        self.embedding_model = SentenceTransformer(self.model_path)
         if os.path.exists(ROOT_RESOURCE + "/faq.index"):
             self.recall_embedding = faiss.read_index(ROOT_RESOURCE + "/faq.index")
         else:
@@ -40,13 +45,7 @@ class GetFAQ(BaseTool):
             return []
 
     def _build_index(self, df: pd.DataFrame):
-        import os
 
-        from sentence_transformers import SentenceTransformer
-        ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'agents/resource')
-
-        self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
-        self.embedding_model = SentenceTransformer(self.model_path)
         recall_embedding = self.embedding_model.encode(df["query"].tolist(), normalize_embeddings=True)
         dim = recall_embedding.shape[-1]
         # 根据嵌入向量的维度创建Faiss索引，使用内积作为度量标准

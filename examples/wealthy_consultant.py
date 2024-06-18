@@ -3,7 +3,7 @@ import os
 from qwen_agent.agents import WealthyConsultant
 from qwen_agent.gui import WebUI
 
-llm_cfg = {'model': 'qwen1.5-72b-instruct', 'model_server': 'dashscope',
+llm_cfg = {'model': 'qwen-plus', 'model_server': 'dashscope',
            "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160"}
 
 tool_list = ["产品查询", "产品推荐"]

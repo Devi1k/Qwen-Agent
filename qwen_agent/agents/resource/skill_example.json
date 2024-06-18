@@ -31,7 +31,7 @@
     ],
     "葛兰管理的基金都有哪些": [
         {
-            "name": "get_product_info",
+            "name": "产品查询",
             "parameters": {
                 "product_type": "基金",
                 "field_type": "",
@@ -43,7 +43,7 @@
     ],
     "华安这个基金最近表现什么样": [
         {
-            "name": "get_product_info",
+            "name": "产品查询",
             "parameters": {
                 "product_type": "基金",
                 "field_type": "收益查询",
