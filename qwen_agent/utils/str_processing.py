@@ -33,13 +33,22 @@ def rm_continuous_placeholders(text):
 def rm_json_md(text):
     pattern = r'```(?:JSON|json|Json)\s*(.*?)```'
     try:
-        clarify_llm_res = re.findall(pattern, text, re.DOTALL)[0]
+        llm_res = re.findall(pattern, text, re.DOTALL)[0]
     except IndexError as e:
         pattern_b = r'```\s*(.*?)```'
-        clarify_llm_res = re.findall(pattern_b, text, re.DOTALL)
-        if not clarify_llm_res:
+        llm_res = re.findall(pattern_b, text, re.DOTALL)
+        if not llm_res:
             print(f"文本：{text} 格式错误 {e} 没有匹配 json 内容")
             return text
         else:
-            return clarify_llm_res[0]
-    return clarify_llm_res
+            return llm_res[0]
+    return llm_res
+
+
+def stream_string_by_chunk(s, chunk_size=6):
+    res = []
+    tmp = ""
+    for i in range(0, len(s), chunk_size):
+        tmp += s[i:i + chunk_size]
+        res.append(tmp)
+    return res

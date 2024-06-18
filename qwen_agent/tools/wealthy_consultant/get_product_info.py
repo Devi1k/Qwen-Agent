@@ -145,7 +145,7 @@ class GetProductInfo(BaseTool):
         'name': 'field_type',
         'type': 'string',
         'description': '要推荐的字段类型，必须为enums当中定义的字段类型，没有提到则为空',
-        'enums': ['评测信息', '加减仓建议', '诊断信息']
+        'enums': ['产品评测', '加减仓建议', '诊断信息']
     }, {
         'name': 'product_name',
         'type': 'string',
@@ -240,6 +240,13 @@ class GetProductInfo(BaseTool):
         faiss.Index: 已经训练和填充了基金名称嵌入向量的Faiss索引。
         """
         # 将基金名称转换为嵌入向量
+        import os
+
+        from sentence_transformers import SentenceTransformer
+        ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'agents/resource')
+
+        self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
+        self.embedding_model = SentenceTransformer(self.model_path)
         all_prd_name_embedding = self.embedding_model.encode(df['基金简称'].tolist(), normalize_embeddings=True)
         # 获取嵌入向量的维度
         dim = all_prd_name_embedding.shape[-1]

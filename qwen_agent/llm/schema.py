@@ -54,7 +54,7 @@ class FunctionCall(BaseModelCompatibleDict):
         super().__init__(name=name, arguments=arguments)
 
     def __repr__(self):
-        return f'FunctionCall({self.model_dump()})'
+        return f'FunctionCall({self.model_dump_json()})'
 
 
 class ContentItem(BaseModelCompatibleDict):
@@ -140,7 +140,10 @@ class ToolCall(BaseModelCompatibleDict):
         super().__init__(action=action, description=description, action_input=action_input, observation=observation)
 
     def __repr__(self):
-        return f'FunctionCallingResult: [{self.model_dump()}]'
+        return f'{self.model_dump()}'
+
+    def __str__(self):
+        return f'{self.model_dump_json(indent=4)}'
 
 
 class ToolResponse(BaseModelCompatibleDict):
@@ -170,7 +173,10 @@ class Turn(BaseModelCompatibleDict):
                          tool_res=tool_res, faq_res=faq_res)
 
     def __repr__(self):
-        return f'Turn: [{self.model_dump()}]'
+        return f'{self.model_dump()}'
+
+    def __str__(self):
+        return f'{self.model_dump_json()}'
 
 
 class Session:
@@ -190,12 +196,15 @@ class Session:
         return history_str
 
     def get_whole_history(self):
-        history_str = ""
+        history_str = "## History: \n"
         for turn in self.turns[-3:]:
             user = "user:" + turn.user_input + "\n"
-            tool_res = "tool result:" + "tool_name:" + turn.tool_res.tool_call.__repr__() + "\n"
+            faq_res = "faq result:\n" + turn.faq_res + "\n"
+            skill_res = "skill result:\n" + turn.skill_rec + "\n"
+            tool_res_info = turn.tool_res.tool_call.__repr__() if turn.tool_res.tool_call is not None else turn.tool_res.reply
+            tool_res = "tool result:\n" + tool_res_info + "\n"
             assistant_output = "assistant:" + turn.assistant_output + "\n"
-            history_str += user + tool_res + assistant_output
+            history_str += user + faq_res + skill_res + tool_res + assistant_output
         return history_str
 
     def __repr__(self):

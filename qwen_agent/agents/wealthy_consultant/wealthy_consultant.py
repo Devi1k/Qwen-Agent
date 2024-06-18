@@ -10,14 +10,14 @@ import json5
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
 from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, FUNCTION, Session, Turn, SKILL_REC, \
-    FunctionCall, ToolResponse, ToolCall
+    FunctionCall, ToolResponse, ToolCall, ASSISTANT
 from qwen_agent.agents import SkillRecognizer
 from .faq_agent import FAQAgent
 from .summarize import Summarizer
 
 from qwen_agent.tools import BaseTool
 from qwen_agent.settings import MAX_LLM_CALL_PER_RUN
-from ...utils.str_processing import rm_json_md
+from ...utils.str_processing import rm_json_md, stream_string_by_chunk
 
 DEFAULT_NAME = '财富顾问'
 DEFAULT_DESC = '我是一个财富顾问，我能了解你的投资情况，帮你分析当下市场状况、产品信息。'
@@ -48,21 +48,29 @@ class WealthyConsultant(Agent):
             raise ValueError("请输入有关信息")
         # New Turn, add user message to session
         turn = Turn(user_input=messages[-1].content[0].text)
+        yield [Message(role=ASSISTANT, content="正在识别已有 FAQ ...")]
+
         faq_start = time.time()
         faq_res = list(self.faq_searcher.run(messages=messages, sessions=self.session, lang=lang))[-1][0].content
         turn.faq_res = faq_res
         print(f"faq cost :{time.time() - faq_start}")
 
         # call skill recognizer
+        yield [Message(role=ASSISTANT, content="正在识别工具...")]
         skill_start = time.time()
-        skill_res = list(self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
-                                            lang=lang))[-1][0]
-        turn.skill_rec = skill_res
+        skill_res = []
+        for rsp in self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
+                                      lang=lang):
+            yield rsp
+            skill_res += rsp
+        skill_res_text = rm_json_md(skill_res[-1].content)
+        turn.skill_rec = skill_res_text
         print(f"skill cost :{time.time() - skill_start}")
 
         # detect and call tools
-        use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res)
+        use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res[-1])
         tool_start = time.time()
+        # yield [Message(role=ASSISTANT, content=f"正在调用 {tool_name} 工具...")]
         if use_tool:
             tool_response = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
                                             session=self.session,
@@ -74,18 +82,20 @@ class WealthyConsultant(Agent):
             tool_response = ToolResponse("", ToolCall("产品推荐", "产品推荐", action_input,
                                                       [{"推荐内容": recommend_list}]))
 
-        # # add tools result to session
+        # add tools result to session
         turn.tool_res = tool_response
         print(f"tool cost :{time.time() - tool_start}")
-
-        # yield final result and add result to session assistant message
+        if tool_response.tool_call is not None:
+            for rsp in stream_string_by_chunk("```json\n" + tool_response.tool_call.__str__() + "\n```"):
+                time.sleep(0.1)
+                yield [
+                    Message(role=ASSISTANT, content=rsp, name="ToolCall")]
         summarize_start = time.time()
         if tool_response.reply != "":
             turn.assistant_output = tool_response.reply
-            tmp_res = ""
-            for t in tool_response.reply:
-                tmp_res += t
-                yield [Message(role="assistant", content=tmp_res)]
+            for t in stream_string_by_chunk(tool_response.reply):
+                time.sleep(0.1)
+                yield [Message(role="assistant", content=t)]
         else:
             response = []
             for rsp in self.summarizer.run(messages=messages, sessions=self.session, turn=turn):
@@ -105,8 +115,6 @@ class WealthyConsultant(Agent):
         Returns:
             Need to call tool or not, tool name, tool args, text replies.
         """
-        func_name = None
-        func_args = None
         # if isinstance(message, dict):
         #     if "function_call" in message:
         #         # todo: process multi function calls

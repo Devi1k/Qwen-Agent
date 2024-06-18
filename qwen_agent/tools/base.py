@@ -36,13 +36,7 @@ class BaseTool(ABC):
             raise ValueError(
                 f'You must set {self.__class__.__name__}.name, either by @register_tool(name=...) or explicitly setting {self.__class__.__name__}.name'
             )
-        import os
 
-        from sentence_transformers import SentenceTransformer
-        ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'agents/resource')
-
-        self.model_path = ROOT_RESOURCE + "/acge_text_embedding"
-        self.embedding_model = SentenceTransformer(self.model_path)
 
     @abstractmethod
     def call(self, params: Union[str, dict], **kwargs) -> Union[str, list, dict]:

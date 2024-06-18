@@ -33,17 +33,16 @@ class Recommend(BaseTool):
 
     def __init__(self, cfg: Optional[Dict] = None):
         super().__init__(cfg)
-        self._read_recommend_set(ROOT_RESOURCE + "/基金表.xls")
-        if not os.path.exists(ROOT_RESOURCE + "/index"):
-            self._build_index()
-        else:
-            self._load_index()
+        self.df = pd.read_excel(ROOT_RESOURCE + "/基金表.xls")
+
+        self._build_index()
 
     def call(self, params: Union[str, dict], **kwargs) -> ToolResponse:
         params = self._verify_json_format_args(params)
         product_style, risk_level, investment_sector = params['product_style'], params['risk_level'], params[
             'investment_sector']
         recommend_list = set()
+
         for ps in product_style.split(","):
             if product_style.split(","):
                 try:
@@ -70,10 +69,10 @@ class Recommend(BaseTool):
         tool_res = ToolCall(self.name, self.description, params, [])
         if len(recommend_list) > 5:
             recommend_res = {"推荐内容": random.sample(recommend_list, 5)}
-        elif len(recommend_list) == 0:
-            recommend_res = random.sample(self.df["基金简称"].tolist(), 5)
-        else:
+        elif len(recommend_list) != 0:
             recommend_res = list(recommend_list)
+        else:
+            return ToolResponse(reply="暂无相关产品推荐")
         tool_res.observation = recommend_res
         return ToolResponse("", tool_res)
 
@@ -110,25 +109,6 @@ class Recommend(BaseTool):
                 if risk not in risk_index:
                     risk_index[risk] = []
                 risk_index[risk].append(row['基金简称'])
-        os.makedirs(ROOT_RESOURCE + "/index")
         self.style_index = style_index
         self.sector_index = sector_index
         self.risk_index = risk_index
-        # 输出结果
-        with open(ROOT_RESOURCE + "/index/style_index.json", "w", encoding="utf8") as fp:
-            json.dump(style_index, fp, indent=4, ensure_ascii=False)
-        with open(ROOT_RESOURCE + "/index/sector_index.json", "w", encoding="utf8") as fp:
-            json.dump(sector_index, fp, indent=4, ensure_ascii=False)
-        with open(ROOT_RESOURCE + "/index/risk_index.json", "w", encoding="utf8") as fp:
-            json.dump(risk_index, fp, indent=4, ensure_ascii=False)
-
-    def _load_index(self):
-        with open(ROOT_RESOURCE + "/index/style_index.json", "r", encoding="utf8") as fp:
-            self.style_index = json5.load(fp)
-        with open(ROOT_RESOURCE + "/index/sector_index.json", "r", encoding="utf8") as fp:
-            self.sector_index = json5.load(fp)
-        with open(ROOT_RESOURCE + "/index/risk_index.json", "r", encoding="utf8") as fp:
-            self.risk_index = json5.load(fp)
-
-    def _read_recommend_set(self, file_path):
-        self.df = pd.read_excel(file_path)

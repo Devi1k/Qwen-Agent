@@ -87,5 +87,6 @@ class Summarizer(Agent):
         cur_turn_info = turn.__repr__()
         if messages[-1][ROLE] == USER:
             cur_user_input = messages[-1][CONTENT][0].text
-            messages[-1][CONTENT][0].text = history_str + "\n" + cur_turn_info + "user:" + cur_user_input + "\n解析结果为：\n"
+            messages[-1][CONTENT][0].text = history_str + "\n" + cur_turn_info + "\n## Input:" + cur_user_input + "\n解析结果为：\n"
+            print(messages[-1][CONTENT][0].text)
         return messages

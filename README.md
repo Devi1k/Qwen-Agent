@@ -1,3 +1,9 @@
+---
+title: Qwen-Agent
+app_file: examples/wealthy_consultant.py
+sdk: gradio
+sdk_version: 4.32.2
+---
 [中文](https://github.com/QwenLM/Qwen-Agent/blob/main/README_CN.md) ｜ English
 
 <p align="center">

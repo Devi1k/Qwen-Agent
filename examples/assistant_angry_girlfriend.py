@@ -14,14 +14,14 @@ def init_agent_service():
     return bot
 
 
-def test(query: str = '你今天真好看'):
-    # Define the agent
-    bot = init_agent_service()
-
-    # Chat
-    messages = [{'role': 'user', 'content': query}]
-    for response in bot.run(messages=messages):
-        print('bot response:', response)
+# def test(query: str = '你今天真好看'):
+#     # Define the agent
+#     bot = init_agent_service()
+#
+#     # Chat
+#     messages = [{'role': 'user', 'content': query}]
+#     for response in bot.run(messages=messages):
+#         print('bot response:', response)
 
 
 def app_tui():
@@ -54,5 +54,5 @@ def app_gui():
 
 if __name__ == '__main__':
     # test()
-    # app_tui()
-    app_gui()
+    app_tui()
+    # app_gui()

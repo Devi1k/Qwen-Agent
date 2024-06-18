@@ -3,7 +3,7 @@ import os
 from qwen_agent.agents import WealthyConsultant
 from qwen_agent.gui import WebUI
 
-llm_cfg = {'model': 'qwen2-72b-instruct', 'model_server': 'dashscope',
+llm_cfg = {'model': 'qwen1.5-72b-instruct', 'model_server': 'dashscope',
            "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160"}
 
 tool_list = ["产品查询", "产品推荐"]
@@ -30,6 +30,7 @@ def app_gui():
                             description="我是一个财富顾问，我能了解你的投资情况，帮你分析当下市场状况、产品信息。",
                             function_list=tool_list)
     chatbot_config = {
+        'verbose': True,
         'prompt.suggestions': [
             '华宝新兴最近能加仓吗',
             '安鑫稳评测一下这个产品',
@@ -43,6 +44,6 @@ def app_gui():
 
 
 if __name__ == '__main__':
-    wealthy_consultant()
-    # os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
-    # app_gui()
+    # wealthy_consultant()
+    os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
+    app_gui()
