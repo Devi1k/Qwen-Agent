@@ -48,31 +48,34 @@ class WealthyConsultant(Agent):
             raise ValueError("请输入有关信息")
         # New Turn, add user message to session
         turn = Turn(user_input=messages[-1].content[0].text)
-        yield [Message(role=ASSISTANT, content="正在识别已有 FAQ ...")]
+        yield [Message(role=ASSISTANT, content="[DEBUG]正在识别已有 FAQ ...")]
 
         faq_start = time.time()
         faq_res = list(self.faq_searcher.run(messages=messages, sessions=self.session, lang=lang))[-1][0].content
         turn.faq_res = faq_res
+        if faq_res != "[]":
+            yield [Message(role=ASSISTANT, content="```json\n" + faq_res[1:-1] + "\n```", name="FAQ")]
+
         print(f"faq cost :{time.time() - faq_start}")
 
         # call skill recognizer
-        yield [Message(role=ASSISTANT, content="正在识别工具...")]
+        yield [Message(role=ASSISTANT, content="[DEBUG]正在识别工具...")]
         skill_start = time.time()
-        skill_res = []
-        for rsp in self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
-                                      lang=lang):
-            yield rsp
-            skill_res += rsp
-        skill_res_text = rm_json_md(skill_res[-1].content)
+        skill_res = list(self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
+                                            lang=lang))[-1][0]
+        skill_res_text = rm_json_md(skill_res.content)
+        if "```" not in skill_res_text: skill_res_text = "```json\n" + skill_res_text + "\n```"
+        for rsp in stream_string_by_chunk(skill_res_text):
+            yield [Message(role=ASSISTANT, content=rsp, name="Skill Recognize")]
         turn.skill_rec = skill_res_text
         print(f"skill cost :{time.time() - skill_start}")
 
         # detect and call tools
-        use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res[-1])
+        use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res)
         tool_start = time.time()
         tool_response = ToolResponse(reply="", tool_call=None)
 
-        if use_tool:
+        if use_tool and tool_name in self.function_map:
             tool_response = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
                                             session=self.session,
                                             **kwargs)
@@ -85,16 +88,16 @@ class WealthyConsultant(Agent):
                 yield [
                     Message(role=ASSISTANT, content=rsp, name="ToolCall")]
         summarize_start = time.time()
-        if tool_response.tool_call is None:
-            turn.assistant_output = tool_response.reply
-            for t in stream_string_by_chunk(tool_response.reply):
-                yield [Message(role="assistant", content=t)]
-        else:
-            response = []
-            for rsp in self.summarizer.run(messages=messages, sessions=self.session, turn=turn):
-                response += rsp
-                yield rsp
-            turn.assistant_output = response[-1].content
+        # if tool_response.tool_call is None:
+        #     turn.assistant_output = tool_response.reply
+        #     for t in stream_string_by_chunk(tool_response.reply):
+        #         yield [Message(role="assistant", content=t)]
+        # else:
+        response = []
+        for rsp in self.summarizer.run(messages=messages, sessions=self.session, turn=turn):
+            response += rsp
+            yield rsp
+        turn.assistant_output = response[-1].content
         print(f"summarize cost :{time.time() - summarize_start}")
         self.session.add_turn(turn)
         print(self.session.__repr__())

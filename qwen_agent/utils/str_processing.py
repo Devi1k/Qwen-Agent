@@ -31,18 +31,18 @@ def rm_continuous_placeholders(text):
 
 
 def rm_json_md(text):
-    pattern = r'```(?:JSON|json|Json)\s*(.*?)```'
-    try:
-        llm_res = re.findall(pattern, text, re.DOTALL)[0]
-    except IndexError as e:
-        pattern_b = r'```\s*(.*?)```'
-        llm_res = re.findall(pattern_b, text, re.DOTALL)
-        if not llm_res:
-            print(f"文本：{text} 格式错误 {e} 没有匹配 json 内容")
-            return text
-        else:
-            return llm_res[0]
-    return llm_res
+    """
+    去除文本中的json格式
+    """
+    json_patterns = [
+        r'```(?:JSON|json|Json)\s*(.*?)```',
+        r'```\s*(.*?)```',
+        r'\{.*?\}'
+    ]
+    matches_findall = [match for pattern in json_patterns for match in re.findall(pattern, text)]
+    if matches_findall:
+        return matches_findall[0]
+    return text
 
 
 def stream_string_by_chunk(s, chunk_size=6):
