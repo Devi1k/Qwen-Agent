@@ -67,6 +67,7 @@ class Recommend(BaseTool):
                 except KeyError:
                     pass
         tool_res = ToolCall(self.name, self.description, params, [])
+        if kwargs.get("flag", None): recommend_list = random.sample(self.df["基金简称"].tolist(), 5)
         if len(recommend_list) > 5:
             recommend_res = {"推荐内容": random.sample(recommend_list, 5)}
         elif len(recommend_list) != 0:

@@ -11,6 +11,7 @@ import torch
 from sentence_transformers import SentenceTransformer
 from qwen_agent.llm.schema import Message, ToolResponse, ToolCall
 from qwen_agent.tools.base import BaseTool, register_tool
+from .recommend import Recommend
 from qwen_agent.llm.schema import SYSTEM
 from qwen_agent.utils.str_processing import rm_json_md
 
@@ -145,7 +146,7 @@ class GetProductInfo(BaseTool):
         'name': 'field_type',
         'type': 'string',
         'description': '要推荐的字段类型，必须为enums当中定义的字段类型，没有提到则为空',
-        'enums': ['产品评测', '加减仓建议', '诊断信息']
+        'enums': ['产品评测', '加减仓市场分析']
     }, {
         'name': 'product_name',
         'type': 'string',
@@ -173,6 +174,9 @@ class GetProductInfo(BaseTool):
             self.all_product_embedding = faiss.read_index(ROOT_RESOURCE + "/all_product_embedding.index")
         else:
             self.all_product_embedding = self._build_index(self.all_product)
+        self.default_field = ["基金简称", "基金编码", "产品风格", "基金风险等级", "投资板块"]
+
+        self.recommend_tool = Recommend()
 
     def _verify_json_format_args(self, params: Union[str, dict]) -> Union[str, dict]:
         """Verify the parameters of the function call"""
@@ -219,13 +223,25 @@ class GetProductInfo(BaseTool):
             if candidate_prd:
                 return ToolResponse("请您确定产品信息: \n" + json.dumps(candidate_prd, ensure_ascii=False, indent=4))
             else:
-                # todo: call recommend
-                pass
+                clarify_res = self.recommend_tool.call(params={"product_style": "", "risk_level": "",
+                                                               "investment_sector": ""}, flag=True)
+                clarify_res.reply = "未找到相关产品，为您推荐以下产品",
+                return clarify_res
             # else return product info field at least five fields
         else:
             # todo: 根据类型（基金/理财） + 名称区分
             target_name_list = [cc["name"] for cc in clarify_content]
-            matching_funds = [candi for candi in candidate_prd if candi["基金简称"] in target_name_list]
+            desire_fields = params["field_type"] if params["field_type"] != "" else ""
+            query_field_list = self.default_field
+            if desire_fields != "":
+                query_field_list.append(desire_fields)
+
+            matching_funds = [
+                {field: candi[field] for field in query_field_list if field in candi}
+                for candi in candidate_prd if candi["基金简称"] in target_name_list
+            ]
+
+            # matching_funds = [candi for candi in candidate_prd if candi["基金简称"] in target_name_list]
 
             return ToolResponse(reply="",
                                 tool_call=ToolCall(action=self.name, description=self.description, action_input=params,

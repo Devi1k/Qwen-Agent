@@ -82,14 +82,12 @@ class WealthyConsultant(Agent):
         print(f"tool cost :{time.time() - tool_start}")
         if tool_response.tool_call is not None:
             for rsp in stream_string_by_chunk("```json\n" + tool_response.tool_call.__str__() + "\n```"):
-                time.sleep(0.1)
                 yield [
                     Message(role=ASSISTANT, content=rsp, name="ToolCall")]
         summarize_start = time.time()
-        if tool_response.reply != "":
+        if tool_response.tool_call is None:
             turn.assistant_output = tool_response.reply
             for t in stream_string_by_chunk(tool_response.reply):
-                time.sleep(0.1)
                 yield [Message(role="assistant", content=t)]
         else:
             response = []

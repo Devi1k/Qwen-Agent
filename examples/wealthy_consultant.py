@@ -4,9 +4,8 @@ from pprint import pprint
 from qwen_agent.agents import WealthyConsultant
 from qwen_agent.gui import WebUI
 
-# todo: 产品信息字段拼接2
-llm_cfg = {'model': 'qwen1.5-72b-chat', 'model_server': 'dashscope',
-           "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160"}
+llm_cfg = {'model': 'qwen-plus', 'model_server': 'dashscope',
+           "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160", "temperature": 0.01}
 
 tool_list = ["产品查询", "产品推荐"]
 

@@ -32,9 +32,10 @@ PROMPT_TEMPLATE_ZH = """
 {function_info}
 
 ##  Constrains:
-- 必须选择Available_Functions定义中的工具，不要编造其他工具
-- parameters包含enums时，解析结果必须是enums当中的选项
-- 直接输出json
+- 必须在Available_Functions定义的范围内选择工具，不要编造其他工具
+- 必须在工具的参数限制范围内抽取信息，不要凭空捏造参数
+- parameters包含enums时，解析结果只能从enums当中选择
+- 严格按照 OutputFormat 格式输出
 - 先在thought中给出推理过程，然后在function_call中给出结果
 
 ##  Examples:
@@ -76,27 +77,22 @@ class SkillRecognizer(Agent):
 
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
 
+        skill_message = []
         # 根据提供的函数映射表构建提示信息
         self._build_prompt(function_map=kwargs["function_map"])
         messages = copy.deepcopy(messages)
-        if messages[0][ROLE] == SYSTEM:
-            messages[0][CONTENT] += PROMPT_TEMPLATE[lang]
-        else:
-            messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
 
+        skill_message.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
         # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
         history_str = kwargs["sessions"].get_tmp_history()
         # history_str = ""
         # for turn in kwargs["sessions"].turns[-3:]:
         #     history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
-
-        # 如果最后一条消息是用户消息，则在消息前添加对话历史和解析结果提示
-        if messages[-1][ROLE] == USER:
-            cur_user_input = messages[-1][CONTENT][0].text
-            messages[-1][CONTENT][0].text = history_str + "user:" + cur_user_input + "\n解析结果为：\n"
+        cur_user_input = messages[-1][CONTENT][0].text
+        skill_message.append(Message(USER, history_str + "user:" + cur_user_input + "\n解析结果为：\n"))
 
         # 调用大语言模型处理消息列表，并返回处理结果
-        output_stream = self._call_llm(messages=messages)
+        output_stream = self._call_llm(messages=skill_message)
         return output_stream
 
     def _build_prompt(self, function_map: Dict[str, BaseTool], lang: str = 'zh', sessions: Session = None):

@@ -59,13 +59,12 @@ class Summarizer(Agent):
                          description=description)
 
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
-
         # 根据提供的函数映射表构建提示信息
+        final_messages = []
+
         messages = copy.deepcopy(messages)
-        if messages[0][ROLE] == SYSTEM:
-            messages[0][CONTENT] += PROMPT_TEMPLATE[lang]
-        else:
-            messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
+
+        final_messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
 
         # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
         # history_str = ""
@@ -73,20 +72,16 @@ class Summarizer(Agent):
         #     history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
 
         # 如果最后一条消息是用户消息，则在消息前添加对话历史和解析结果提示
-        messages = self._build_prompt(messages=messages, sessions=kwargs.get("sessions"), turn=kwargs.get("turn"))
+        final_messages.append(self._build_prompt(messages=messages, sessions=kwargs.get("sessions"), turn=kwargs.get("turn")))
 
         # 调用大语言模型处理消息列表，并返回处理结果
-        output_stream = self._call_llm(messages=messages)
+        output_stream = self._call_llm(messages=final_messages)
         return output_stream
 
-    def _build_prompt(self, messages: List[Message], sessions: Session = None, turn: Turn = None) -> List[Message]:
-
+    def _build_prompt(self, messages: List[Message], sessions: Session = None, turn: Turn = None) -> Message:
         # 对示例字符串进行预处理，准备插入到模板中的内容
         # example_str = self._example_preprocess()
         history_str = sessions.get_whole_history()
         cur_turn_info = turn.__repr__()
-        if messages[-1][ROLE] == USER:
-            cur_user_input = messages[-1][CONTENT][0].text
-            messages[-1][CONTENT][0].text = history_str + "\n" + cur_turn_info + "\n## Input:" + cur_user_input + "\n解析结果为：\n"
-            print(messages[-1][CONTENT][0].text)
-        return messages
+        cur_user_input = messages[-1][CONTENT][0].text
+        return Message(USER, history_str + "\n" + cur_turn_info + "\n## Input:" + cur_user_input + "\n解析结果为：\n")
