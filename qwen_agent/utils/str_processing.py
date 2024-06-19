@@ -34,15 +34,20 @@ def rm_json_md(text):
     """
     去除文本中的json格式
     """
-    json_patterns = [
-        r'```(?:JSON|json|Json)\s*(.*?)```',
-        r'```\s*(.*?)```',
-        r'\{.*?\}'
-    ]
-    matches_findall = [match for pattern in json_patterns for match in re.findall(pattern, text)]
-    if matches_findall:
-        return matches_findall[0]
-    return text
+    objects = []
+    depth = 0
+    obj_start = None
+    for i, char in enumerate(text):
+        if char == '{':
+            if depth == 0:
+                obj_start = i
+            depth += 1
+        elif char == '}':
+            depth -= 1
+            if depth == 0 and obj_start is not None:
+                objects.append(text[obj_start:i + 1])
+                obj_start = None
+    return objects[0]
 
 
 def stream_string_by_chunk(s, chunk_size=6):

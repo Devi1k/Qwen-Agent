@@ -17,13 +17,13 @@ def test_function_content(cfg):
     else:
         llm = get_chat_model({
             # Use the model service provided by Together.AI:
-            'model': 'Qwen/Qwen1.5-14B-Chat',
-            'model_server': 'https://api.together.xyz',  # api_base
-            'api_key': os.getenv('TOGETHER_API_KEY'),
+            "model": "Qwen/Qwen2-72B-Instruct",
+            "model_server": "https://api.together.xyz",  # api_base
+            "api_key": os.getenv("TOGETHER_API_KEY"),
         })
 
     # Step 1: send the conversation and available functions to the model
-    messages = [{'role': 'user', 'content': "What's the weather like in San Francisco?"}]
+    messages = [{'role': 'user', 'content': "请介绍通义千问"}]
     functions = [{
         'name': 'get_current_weather',
         'description': 'Get the current weather in a given location',
@@ -45,19 +45,19 @@ def test_function_content(cfg):
 
     print('# Assistant Response 1:')
     responses = []
-    for responses in llm.chat(messages=messages, functions=functions, stream=True):
+    for responses in llm.chat(messages=messages,  stream=True):
         print(responses)
 
     messages.extend(responses)  # extend conversation with assistant's reply
 
     # Step 2: check if the model wanted to call a function
-    last_response = messages[-1]
-    assert 'function_call' in last_response
-    messages.append({
-        'role': 'function',
-        'name': last_response['function_call']['name'],
-        'content': '',
-    })
+    # last_response = messages[-1]
+    # assert 'function_call' in last_response
+    # messages.append({
+    #     'role': 'function',
+    #     'name': last_response['function_call']['name'],
+    #     'content': '',
+    # })
 
     print('# Assistant Response 2:')
     for responses in llm.chat(

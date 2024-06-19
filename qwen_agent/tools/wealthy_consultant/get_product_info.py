@@ -212,14 +212,14 @@ class GetProductInfo(BaseTool):
         clarify_llm_res = list(kwargs["llm"].chat(messages=messages))[-1][0].content
         if "```" in clarify_llm_res:
             clarify_llm_res = rm_json_md(clarify_llm_res)
-        clarify_res = json5.loads(clarify_llm_res)
         try:
+            clarify_res = json5.loads(clarify_llm_res)
             clarify_flag, clarify_content = clarify_res["是否需要澄清"] == "是", clarify_res["链接结果"]
         except Exception as e:
-            print(clarify_res)
+            print(clarify_llm_res)
             return ToolResponse(reply=clarify_llm_res)
         # if need clarify Splicing fixed template
-        if clarify_flag:
+        if len(clarify_res["链接结果"]) > 1 and clarify_flag:
             if candidate_prd:
                 return ToolResponse("请您确定产品信息: \n" + json.dumps(candidate_prd, ensure_ascii=False, indent=4))
             else:
