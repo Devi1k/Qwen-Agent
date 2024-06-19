@@ -33,7 +33,7 @@ PROMPT_TEMPLATE_ZH = """
 
 ##  Constrains:
 - 必须在Available_Functions定义的范围内选择工具，不要编造其他工具
-- 必须在工具的参数限制范围内抽取信息，不要凭空捏造参数
+- 必须在工具的parameters范围内抽取信息，不要凭空捏造
 - parameters包含enums时，解析结果只能从enums当中选择
 - 严格按照 OutputFormat 格式输出
 - 先在thought中给出推理过程，然后在function_call中给出结果

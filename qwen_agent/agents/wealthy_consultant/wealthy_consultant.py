@@ -16,11 +16,12 @@ from .faq_agent import FAQAgent
 from .summarize import Summarizer
 
 from qwen_agent.tools import BaseTool
-from qwen_agent.settings import MAX_LLM_CALL_PER_RUN
+from ...log import logger
 from ...utils.str_processing import rm_json_md, stream_string_by_chunk
 
 DEFAULT_NAME = '财富顾问'
 DEFAULT_DESC = '我是一个财富顾问，我能了解你的投资情况，帮你分析当下市场状况、产品信息。'
+RESOURCE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "resource")
 
 
 class WealthyConsultant(Agent):
@@ -37,11 +38,13 @@ class WealthyConsultant(Agent):
                          system_message=system_message,
                          name=name,
                          description=description)
-        self.skill_rec = SkillRecognizer(llm=self.llm)
+        with open(os.path.join(RESOURCE_PATH, "model_config.json"), "r", encoding="utf-8") as f:
+            self.model_cfg = json.load(f)
+        self.skill_rec = SkillRecognizer(llm=self.model_cfg["tool_llm_cfg"])
         self.session = Session(turns=[])
 
-        self.summarizer = Summarizer(llm=self.llm)
-        self.faq_searcher = FAQAgent(function_list=["faq_embedding"], llm=llm)
+        self.summarizer = Summarizer(llm=self.model_cfg["summarize_llm_cfg"])
+        self.faq_searcher = FAQAgent(function_list=["faq_embedding"], llm=self.model_cfg["tool_llm_cfg"])
 
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
         if messages[-1].content[0].text.strip() == '':
@@ -76,6 +79,7 @@ class WealthyConsultant(Agent):
         tool_response = ToolResponse(reply="", tool_call=None)
 
         if use_tool and tool_name in self.function_map:
+            yield [Message(role=ASSISTANT, content=f"[DEBUG]正在调用 {tool_name} 工具...")]
             tool_response = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
                                             session=self.session,
                                             **kwargs)
@@ -100,7 +104,7 @@ class WealthyConsultant(Agent):
         turn.assistant_output = response[-1].content
         print(f"summarize cost :{time.time() - summarize_start}")
         self.session.add_turn(turn)
-        print(self.session.__repr__())
+        logger.info(self.session.__repr__())
 
     def _detect_tool(self, message: Message) -> Tuple[bool, str, dict, str]:
         """A built-in tool call detection for func_call format message.

@@ -1,30 +1,9 @@
 {
-    "我最近怎么亏了这么多": [
-        {
-            "name": "get_account_info",
-            "parameters": {
-                "cstno": 62121206326456862,
-                "cstname": "张三",
-                "ctfno": 11010120912085089124
-            }
-        }
-    ],
-    "我持仓的基金最近表现怎样": [
-        {
-            "name": "get_account_info",
-            "parameters": {
-                "cstno": 62121206326456862,
-                "cstname": "张三",
-                "ctfno": 11010120912085089124
-            }
-        }
-    ],
     "帮我推荐一只低风险的科技基金": [
         {
-            "name": "call_recommendation",
+            "name": "产品推荐",
             "parameters": {
                 "risk_level": "低风险",
-                "product_style": "",
                 "investment_sector": "科技"
             }
         }
@@ -34,9 +13,6 @@
             "name": "产品查询",
             "parameters": {
                 "product_type": "基金",
-                "field_type": "",
-                "product_name": "",
-                "product_id": "",
                 "product_manager": "葛兰"
             }
         }
@@ -47,9 +23,15 @@
             "parameters": {
                 "product_type": "基金",
                 "field_type": "收益查询",
-                "product_name": "华安",
-                "product_id": "",
-                "product_manager": ""
+                "product_name": "华安"
+            }
+        }
+    ],
+    "请帮我比较一下中银和华安这两个产品": [
+        {
+            "name": "产品查询",
+            "parameters": {
+                "product_name": "华安,中银"
             }
         }
     ]

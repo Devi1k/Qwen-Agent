@@ -176,7 +176,7 @@ class Turn(BaseModelCompatibleDict):
         return f'{self.model_dump()}'
 
     def __str__(self):
-        return f'{self.model_dump_json()}'
+        return f'{self.model_dump_json(indent=4)}'
 
 
 class Session:
@@ -207,4 +207,4 @@ class Session:
         return history_str
 
     def __repr__(self):
-        return [f"turn {index + 1}:" + turn.__repr__() + "\n" for index, turn in enumerate(self.turns)]
+        return [f"turn {index + 1}:" + turn.__str__() + "\n" for index, turn in enumerate(self.turns)]

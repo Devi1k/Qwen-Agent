@@ -16,19 +16,23 @@ ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__f
 
 @register_tool('产品推荐')
 class Recommend(BaseTool):
-    description = '基金/理财产品信息查询'
+    description = '调用理财/产品推荐系统'
     parameters = [{
         'name': 'product_style',
         'type': 'string',
         'description': '产品风格',
+        'enums': ['均衡', '偏大盘', '中波动固收+', '偏中短债', '偏成长', '大小盘平衡', '偏中短债', '大小盘平衡 ',
+                  '科技主题', '偏小盘', '医药主题', '大小盘平衡']
     }, {
         'name': 'risk_level',
         'type': 'string',
         'description': '风险等级',
+        'enums': ['低风险', '中低风险', '中风险', '中高风险', '高风险']
     }, {
         'name': 'investment_sector',
         'type': 'string',
-        'description': '投资板块'
+        'description': '投资板块',
+        'enums': ['周期', '金融地产', '消费', '科技', '制造', '医药']
     }]
 
     def __init__(self, cfg: Optional[Dict] = None):
@@ -39,8 +43,9 @@ class Recommend(BaseTool):
 
     def call(self, params: Union[str, dict], **kwargs) -> ToolResponse:
         params = self._verify_json_format_args(params)
-        product_style, risk_level, investment_sector = params['product_style'], params['risk_level'], params[
-            'investment_sector']
+        product_style, risk_level, investment_sector = params.get('product_style', ""), params.get('risk_level',
+                                                                                                   ""), params.get(
+            'investment_sector', "")
         recommend_list = set()
 
         for ps in product_style.split(","):
@@ -89,7 +94,7 @@ class Recommend(BaseTool):
 
         # 根据产品风格建立索引
         for index, row in df.iterrows():
-            styles = row['产品风格'].split('，')
+            styles = row['产品风格'].split(',')
             for style in styles:
                 if style not in style_index:
                     style_index[style] = []
@@ -97,7 +102,7 @@ class Recommend(BaseTool):
 
         # 根据投资板块建立索引
         for index, row in df.iterrows():
-            sectors = row['投资板块'].split('，')
+            sectors = row['投资板块'].split(',')
             for sector in sectors:
                 if sector not in sector_index:
                     sector_index[sector] = []
@@ -105,7 +110,7 @@ class Recommend(BaseTool):
 
         # 根据基金风险等级建立索引
         for index, row in df.iterrows():
-            risks = row['基金风险等级'].split('，')
+            risks = row['基金风险等级'].split(',')
             for risk in risks:
                 if risk not in risk_index:
                     risk_index[risk] = []
