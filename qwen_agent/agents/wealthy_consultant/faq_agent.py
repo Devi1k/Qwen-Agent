@@ -108,7 +108,7 @@ class FAQAgent(Agent):
             raise ValueError(f"解析json失败: {faq_res}")
         candidate_faq_dict = {index: a for index, a in enumerate(self.candidate_faq_str.strip().split("\n"))}
         try:
-            res_messages.content = json5.dumps([candidate_faq_dict[index - 1] for index in faq_json_res["faqs"]],
+            res_messages.content = json.dumps([candidate_faq_dict[index - 1] for index in faq_json_res["faqs"]],
                                                ensure_ascii=False)
         except KeyError:
             pass

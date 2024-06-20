@@ -1,22 +1,17 @@
-import copy
-import json
-import re
-import time
-import traceback
-from typing import Dict, Iterator, List, Optional, Union, Tuple
 import os
+import time
+from typing import Any
+from typing import Dict, Iterator, List, Optional, Union
+
 import json5
 
 from qwen_agent import Agent
-from qwen_agent.llm.base import BaseChatModel
-from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, FUNCTION, Session, Turn, SKILL_REC, \
-    FunctionCall, ToolResponse, ToolCall, ASSISTANT
 from qwen_agent.agents import SkillRecognizer
+from qwen_agent.llm.base import BaseChatModel
+from qwen_agent.llm.schema import DEFAULT_SYSTEM_MESSAGE, Message, Session, Turn, ToolResponse, ASSISTANT, ContentItem
+from qwen_agent.tools import BaseTool
 from .faq_agent import FAQAgent
 from .summarize import Summarizer
-
-from qwen_agent.tools import BaseTool
-from ...log import logger
 from ...utils.str_processing import rm_json_md, stream_string_by_chunk
 
 DEFAULT_NAME = '财富顾问'
@@ -75,19 +70,23 @@ class WealthyConsultant(Agent):
         use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res)
         tool_start = time.time()
         tool_response = ToolResponse(reply="", tool_call=None)
+        tool_response_list = []
 
-        if use_tool and tool_name in self.function_map:
-            tool_response = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
-                                            session=self.session,
-                                            **kwargs)
+        if use_tool:
+            for t_name, t_args in zip(tool_name, tool_args):
+                tool_response = self._call_tool(t_name, t_args, messages=messages, llm=self.llm,
+                                                session=self.session,
+                                                **kwargs)
+                tool_response_list.append(tool_response)
 
         # add tools result to session
-        turn.tool_res = tool_response
+        turn.tool_res = tool_response_list
         print(f"tool cost :{time.time() - tool_start}")
-        if tool_response.tool_call is not None:
-            for rsp in stream_string_by_chunk("```json\n" + tool_response.tool_call.__str__() + "\n```"):
-                yield [
-                    Message(role=ASSISTANT, content=rsp, name="ToolCall")]
+        if tool_response:
+            for tool_res in tool_response_list:
+                if tool_res.tool_call is not None:
+                    for rsp in stream_string_by_chunk("```json\n" + tool_res.tool_call.__str__() + "\n```"):
+                        yield [Message(role=ASSISTANT, content=rsp, name="ToolCall")]
         summarize_start = time.time()
         # if tool_response.tool_call is None:
         #     turn.assistant_output = tool_response.reply
@@ -103,7 +102,8 @@ class WealthyConsultant(Agent):
         self.session.add_turn(turn)
         print(self.session.__repr__())
 
-    def _detect_tool(self, message: Message) -> Tuple[bool, str, dict, str]:
+    def _detect_tool(self, message: Message) -> tuple[
+        bool, list[str] | None, list[Dict] | dict[Any, Any], str | list[ContentItem]]:
         """A built-in tool call detection for func_call format message.
 
         Args:
@@ -128,7 +128,11 @@ class WealthyConsultant(Agent):
         except Exception as e:
             print(f"解析json失败: {e} {content}")
         if len(func["function_call"]) != 0:
-            func_name, func_args = func["function_call"][0]["name"], func["function_call"][0]["parameters"]
+            func_name, func_args = [], []
+            func = func["function_call"]
+            for i in range(len(func)):
+                func_name.append(func[i]["name"])
+                func_args.append(func[i]["parameters"])
         else:
             func_name, func_args = None, {}
         text = message.content

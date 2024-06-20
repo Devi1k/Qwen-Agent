@@ -34,5 +34,20 @@
                 "product_name": "华安,中银"
             }
         }
+    ],
+    "推荐一只低风险的科技基金，并评测其信息": [
+        {
+            "name": "产品推荐",
+            "parameters": {
+                "risk_level": "低风险",
+                "investment_sector": "科技"
+            }
+        },
+        {
+            "name": "产品查询",
+            "parameters": {
+                "field_type": "产品评测"
+            }
+        }
     ]
 }

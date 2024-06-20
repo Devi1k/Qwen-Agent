@@ -1,14 +1,11 @@
 import copy
 import json
 import os
-import traceback
-from typing import Dict, Iterator, List, Optional, Union, Tuple
-
-import json5
+from typing import Dict, Iterator, List, Optional, Union
 
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
-from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, ROLE, SYSTEM, USER, Session
+from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, SYSTEM, USER, Session
 from qwen_agent.tools import BaseTool
 
 DEFAULT_NAME = 'Skill Recognizer'
@@ -22,10 +19,10 @@ PROMPT_TEMPLATE_ZH = """
 - format: json
 - json sample: 
 ```json
-{
+{{
     "thought": "",
     "function_call": []
-}
+}}
 ```
 
 ## Available_Functions :
@@ -84,7 +81,7 @@ class SkillRecognizer(Agent):
 
         skill_message.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
         # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
-        history_str = kwargs["sessions"].get_tmp_history()
+        history_str = self._get_history(kwargs["sessions"])
         # history_str = ""
         # for turn in kwargs["sessions"].turns[-3:]:
         #     history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
@@ -94,6 +91,14 @@ class SkillRecognizer(Agent):
         # 调用大语言模型处理消息列表，并返回处理结果
         output_stream = self._call_llm(messages=skill_message)
         return output_stream
+
+    def _get_history(self, sessions: Session) -> str:
+        history_str = "## History:\n"
+        for turn in sessions.turns[-3:]:
+            history_str += ("user:" + turn.user_input + "\n" +
+                            "tool result:" + turn.tool_res.tool_call.__str__() if turn.tool_res.tool_call is not None else turn.tool_res.reply + "\n" +
+                                                                                                                           "assistant:" + turn.assistant_output + "\n")
+        return history_str
 
     def _build_prompt(self, function_map: Dict[str, BaseTool], lang: str = 'zh', sessions: Session = None):
 
@@ -107,7 +112,7 @@ class SkillRecognizer(Agent):
         function_info_str = ""
         # 遍历函数信息列表，将每个函数信息格式化为JSON字符串，并追加到函数信息字符串中
         for func in function_info:
-            function_info_str += "- " + json5.dumps(func, ensure_ascii=False, indent=4) + "\n"
+            function_info_str += "- " + json.dumps(func, ensure_ascii=False, indent=4) + "\n"
 
         # 更新语言模板，将函数信息和示例字符串插入到模板中相应的位置
         PROMPT_TEMPLATE[lang] = PROMPT_TEMPLATE[lang].replace("{function_info}", function_info_str).replace("{example}",
@@ -118,6 +123,7 @@ class SkillRecognizer(Agent):
             example = json.load(f)
         example_str = ""
         for user_input, call_fun in example.items():
-            example_str += "user: " + user_input + "\n" + "解析结果为: " + json.dumps({"function_call": call_fun},
-                                                                                      ensure_ascii=False) + "\n"
+            example_str += "user: " + user_input + "\n" + "解析结果为: " + json.dumps(
+                {"thought": "xxxx", "function_call": call_fun},
+                ensure_ascii=False) + "\n"
         return example_str

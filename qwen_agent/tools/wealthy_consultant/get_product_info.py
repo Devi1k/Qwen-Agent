@@ -1,19 +1,17 @@
 import json
 import os
-import re
 from typing import Dict, Optional, Union, List
+
 import faiss
 import json5
 import numpy as np
 import pandas as pd
-import torch
 
-from sentence_transformers import SentenceTransformer
-from qwen_agent.llm.schema import Message, ToolResponse, ToolCall
-from qwen_agent.tools.base import BaseTool, register_tool
-from .recommend import Recommend
+from qwen_agent.llm.schema import Message, ToolResponse, ToolCall, Session
 from qwen_agent.llm.schema import SYSTEM
+from qwen_agent.tools.base import BaseTool, register_tool
 from qwen_agent.utils.str_processing import rm_json_md
+from .recommend import Recommend
 
 ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'agents/resource')
 
@@ -46,7 +44,7 @@ PROMPT_TEMPLATE_ZH = """
 - "用户持仓的基金"为用户目前的持仓基金列表
 - "历史对话"可能包含一些推荐的基金列表
 - 请结合对话上下文、用户的持仓基金、候选的相关基金综合判断用户输入中的基金实体为哪一个
-- 若有多个实体对应无法确定，"是否需要澄清"为"是"; 若如示例每个关键词有匹配，"是否需要澄清"为"否"
+- 仅有多个实体对应无法确定，"是否需要澄清"为"是";
 
 ##  Examples:
 - 示例1: 
@@ -137,6 +135,25 @@ PROMPT_TEMPLATE = {
 }
 
 
+def _build_clarify_prompt(user_input: str, candidate_prd: List[Dict], user_product: Dict) -> List[Message]:
+    candidate_prd_str = [json.dumps(c, ensure_ascii=False, indent=4) for c in candidate_prd]
+    clarify_content = ("相关基金信息：\n" + ",".join(candidate_prd_str) + "\n" +
+                       "用户持仓的基金：\n" + json.dumps(user_product, ensure_ascii=False, indent=4) + "\n" +
+                       "历史对话：\n" + user_input + "\n" + "实体链指结果：" + "\n")
+    clarify_content_str = "## Input:\n" + clarify_content
+    messages = [Message(**{"role": "user", "content": clarify_content_str})]
+    messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE['zh']))
+    return messages
+
+
+def _get_history(session: Session) -> str:
+    history_str = ""
+    if session:
+        for turn in session.turns[-3:]:
+            history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
+    return history_str
+
+
 @register_tool('产品查询')
 class GetProductInfo(BaseTool):
     description = '基金/理财产品信息查询'
@@ -209,9 +226,9 @@ class GetProductInfo(BaseTool):
         user_product = {}
 
         # build clarify content
-        user_input = kwargs["session"].get_tmp_history() + "user:" + kwargs["messages"][-1].content[0].text
-        messages = self._build_clarify_prompt(user_input=user_input,
-                                              candidate_prd=candidate_prd, user_product=user_product)
+        user_input = _get_history(kwargs.get("session", None)) + "user:" + kwargs["messages"][-1].content[0].text
+        messages = _build_clarify_prompt(user_input=user_input,
+                                         candidate_prd=candidate_prd, user_product=user_product)
         # call llm for deciding clarify
         clarify_llm_res = list(kwargs["llm"].chat(messages=messages))[-1][0].content
         if "```" in clarify_llm_res:
@@ -302,14 +319,9 @@ class GetProductInfo(BaseTool):
                 prd_index_res = prd_index[score > 0.6]
                 if len(prd_index_res) != 0:
                     candidate_prd.append(self.all_product.iloc[prd_index_res].to_dict(orient="records")[0])
-        return candidate_prd
 
-    def _build_clarify_prompt(self, user_input: str, candidate_prd: List[Dict], user_product: Dict) -> List[Message]:
-        candidate_prd_str = [json.dumps(c, ensure_ascii=False, indent=4) for c in candidate_prd]
-        clarify_content = ("相关基金信息：\n" + ",".join(candidate_prd_str) + "\n" +
-                           "用户持仓的基金：\n" + json.dumps(user_product, ensure_ascii=False, indent=4) + "\n" +
-                           "历史对话：\n" + user_input + "\n" + "实体链指结果：" + "\n")
-
-        messages = [Message(**{"role": "user", "content": clarify_content})]
-        messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE['zh']))
-        return messages
+        desire_fields = ["基金简称", "基金编码"]
+        matching_funds = [
+            {field: candi[field] for field in desire_fields if field in candi}
+            for candi in candidate_prd]
+        return matching_funds

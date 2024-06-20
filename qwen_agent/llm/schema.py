@@ -159,14 +159,14 @@ class Turn(BaseModelCompatibleDict):
     user_input: str
     assistant_output: Optional[str]
     skill_rec: Optional[str] = None
-    tool_res: Optional[ToolResponse] = None
+    tool_res: Optional[List[ToolResponse]] = None
     faq_res: Optional[str] = None
 
     def __init__(self,
                  user_input: Optional[str] = None,
                  assistant_output: Optional[str] = None,
                  skill_rec: Optional[str] = None,
-                 tool_res: Optional[Dict] = None,
+                 tool_res: Optional[List[ToolResponse]] = None,
                  faq_res: Optional[str] = None,
                  **kwargs):
         super().__init__(user_input=user_input, assistant_output=assistant_output, skill_rec=skill_rec,
@@ -188,19 +188,12 @@ class Session:
     def add_turn(self, turn: Turn):
         self.turns.append(turn)
 
-    def get_tmp_history(self):
-        # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
-        history_str = "## History:\n"
-        for turn in self.turns[-3:]:
-            history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
-        return history_str
-
     def get_whole_history(self):
         history_str = "## History: \n"
         for turn in self.turns[-3:]:
             user = "user:" + turn.user_input + "\n"
             faq_res = "faq result:\n" + turn.faq_res + "\n"
-            tool_res_info = turn.tool_res.tool_call.__repr__() if turn.tool_res.tool_call is not None else turn.tool_res.reply
+            tool_res_info = turn.tool_res.tool_call.__str__() if turn.tool_res.tool_call is not None else turn.tool_res.reply
             tool_res = "tool result:\n" + tool_res_info + "\n"
             assistant_output = "assistant:" + turn.assistant_output + "\n"
             history_str += user + faq_res + tool_res + assistant_output
