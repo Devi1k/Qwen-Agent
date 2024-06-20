@@ -95,9 +95,12 @@ class SkillRecognizer(Agent):
     def _get_history(self, sessions: Session) -> str:
         history_str = "## History:\n"
         for turn in sessions.turns[-3:]:
-            history_str += ("user:" + turn.user_input + "\n" +
-                            "tool result:" + turn.tool_res.tool_call.__str__() if turn.tool_res.tool_call is not None else turn.tool_res.reply + "\n" +
-                                                                                                                           "assistant:" + turn.assistant_output + "\n")
+            # tool_res = "tool result:" + "\n"
+            # for t_r in turn.tool_res:
+            #     tool_res += t_r.tool_call.__str__() if t_r.tool_call is not None else t_r.reply + "\n"
+            history_str += ("user:\n" + turn.user_input + "\n" +
+                            "assistant:\n" + turn.assistant_output + "\n")
+            # tool_res +
         return history_str
 
     def _build_prompt(self, function_map: Dict[str, BaseTool], lang: str = 'zh', sessions: Session = None):

@@ -34,20 +34,24 @@ def rm_json_md(text):
     """
     去除文本中的json格式
     """
-    objects = []
-    depth = 0
-    obj_start = None
-    for i, char in enumerate(text):
-        if char == '{':
-            if depth == 0:
-                obj_start = i
-            depth += 1
-        elif char == '}':
-            depth -= 1
-            if depth == 0 and obj_start is not None:
-                objects.append(text[obj_start:i + 1])
-                obj_start = None
-    return objects[0]
+    try:
+        objects = []
+        depth = 0
+        obj_start = None
+        for i, char in enumerate(text):
+            if char == '{':
+                if depth == 0:
+                    obj_start = i
+                depth += 1
+            elif char == '}':
+                depth -= 1
+                if depth == 0 and obj_start is not None:
+                    objects.append(text[obj_start:i + 1])
+                    obj_start = None
+        return objects[0]
+    except Exception as e:
+        print(objects)
+        return text
 
 
 def stream_string_by_chunk(s, chunk_size=6):

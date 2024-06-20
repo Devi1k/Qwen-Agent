@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Dict, Optional, Union, List
+from typing import Dict, Optional, Union, List, Tuple
 
 import faiss
 import json5
@@ -221,14 +221,14 @@ class GetProductInfo(BaseTool):
                 "field_type", "")
         except Exception as e:
             return ToolResponse(reply=f"{e}")
-        candidate_prd = self._get_candidate_prd(prd_name, prd_id)
+        clarify_match, candidate_prd = self._get_candidate_prd(prd_name, prd_id)
         # get user product info from params
         user_product = {}
 
         # build clarify content
         user_input = _get_history(kwargs.get("session", None)) + "user:" + kwargs["messages"][-1].content[0].text
         messages = _build_clarify_prompt(user_input=user_input,
-                                         candidate_prd=candidate_prd, user_product=user_product)
+                                         candidate_prd=clarify_match, user_product=user_product)
         # call llm for deciding clarify
         clarify_llm_res = list(kwargs["llm"].chat(messages=messages))[-1][0].content
         if "```" in clarify_llm_res:
@@ -251,10 +251,14 @@ class GetProductInfo(BaseTool):
             # else return product info field at least five fields
         else:
             # todo: 根据类型（基金/理财） + 名称区分
-            target_name_list = [cc["name"] for cc in clarify_content]
+            try:
+                target_name_list = [cc["name"] for cc in clarify_content]
+            except KeyError:
+                print(clarify_content)
+                target_name_list = []
             desire_fields = [ft if ft != "" and ft in self.parameters[1]["enums"] else "" for ft in
                              field_type.split(",")]
-            query_field_list = self.default_field
+            query_field_list = self.default_field.copy()
             if desire_fields != "":
                 query_field_list.extend(desire_fields)
 
@@ -299,9 +303,13 @@ class GetProductInfo(BaseTool):
         faiss.write_index(faiss_index, ROOT_RESOURCE + "/all_product_embedding.index")
         return faiss_index
 
-    def _get_candidate_prd(self, prd_name: str, prd_id: str) -> List[Dict]:
+    def _get_candidate_prd(self, prd_name: str, prd_id: str) -> Tuple[List[Dict], List[Dict]]:
         candidate_prd = []
-        prd_name_list, prd_id_list = prd_name.split(","), prd_id.split(",")
+        if isinstance(prd_name, list) or isinstance(prd_id, list):
+            prd_name_list, prd_id_list = prd_name, prd_id
+        else:
+            prd_name_list, prd_id_list = prd_name.split(","), prd_id.split(",")
+
         if len(prd_id_list) < len(prd_name_list):
             for i in range(len(prd_id_list), len(prd_name_list)): prd_id_list.append("")
         else:
@@ -324,4 +332,4 @@ class GetProductInfo(BaseTool):
         matching_funds = [
             {field: candi[field] for field in desire_fields if field in candi}
             for candi in candidate_prd]
-        return matching_funds
+        return matching_funds, candidate_prd

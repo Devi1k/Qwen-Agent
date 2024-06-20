@@ -124,7 +124,7 @@ class WealthyConsultant(Agent):
             content = rm_json_md(content)
         func = {"function_call": [{"name": None, "parameters": None}]}
         try:
-            func = json5.loads(content)
+            func = json5.loads(rm_json_md(content))
         except Exception as e:
             print(f"解析json失败: {e} {content}")
         if len(func["function_call"]) != 0:
