@@ -38,13 +38,11 @@ class WealthyConsultant(Agent):
                          system_message=system_message,
                          name=name,
                          description=description)
-        with open(os.path.join(RESOURCE_PATH, "model_config.json"), "r", encoding="utf-8") as f:
-            self.model_cfg = json.load(f)
-        self.skill_rec = SkillRecognizer(llm=self.model_cfg["tool_llm_cfg"])
+        self.skill_rec = SkillRecognizer(llm=self.llm)
         self.session = Session(turns=[])
 
-        self.summarizer = Summarizer(llm=self.model_cfg["summarize_llm_cfg"])
-        self.faq_searcher = FAQAgent(function_list=["faq_embedding"], llm=self.model_cfg["tool_llm_cfg"])
+        self.summarizer = Summarizer(llm=self.llm)
+        self.faq_searcher = FAQAgent(function_list=["faq_embedding"], llm=llm)
 
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
         if messages[-1].content[0].text.strip() == '':
@@ -79,7 +77,6 @@ class WealthyConsultant(Agent):
         tool_response = ToolResponse(reply="", tool_call=None)
 
         if use_tool and tool_name in self.function_map:
-            yield [Message(role=ASSISTANT, content=f"[DEBUG]正在调用 {tool_name} 工具...")]
             tool_response = self._call_tool(tool_name, tool_args, messages=messages, llm=self.llm,
                                             session=self.session,
                                             **kwargs)
@@ -104,7 +101,7 @@ class WealthyConsultant(Agent):
         turn.assistant_output = response[-1].content
         print(f"summarize cost :{time.time() - summarize_start}")
         self.session.add_turn(turn)
-        logger.info(self.session.__repr__())
+        print(self.session.__repr__())
 
     def _detect_tool(self, message: Message) -> Tuple[bool, str, dict, str]:
         """A built-in tool call detection for func_call format message.
