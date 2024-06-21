@@ -1,15 +1,12 @@
 import json
-import time
-from typing import Dict, Iterator, List, Optional, Union, Tuple
 import os
-import json5
+import time
+from typing import Dict, Iterator, List, Optional, Union
 
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
-from qwen_agent.llm.schema import DEFAULT_SYSTEM_MESSAGE, Message, Session, Turn, SYSTEM, ASSISTANT
-
+from qwen_agent.llm.schema import DEFAULT_SYSTEM_MESSAGE, Message, Session, SYSTEM, ASSISTANT
 from qwen_agent.tools import BaseTool
-from qwen_agent.utils.str_processing import rm_json_md
 
 DEFAULT_NAME = 'FAQ'
 DEFAULT_DESC = '检索相关 FAQ 问题'
@@ -57,7 +54,6 @@ user: 基金的开放式是指什么，赎回几天能到
 """
 
 
-
 class FAQAgent(Agent):
 
     def __init__(self,
@@ -79,6 +75,7 @@ class FAQAgent(Agent):
 {'编号': 2, '问题': '开放式基金是什么', '答案': '开放式基金是一种灵活的投资基金类型，其份额数量不是固定的，可以根据投资者的需求进行随时的申购（购买）和赎回（卖出）。', '参考相似问': []}
 {'编号': 3, '问题': '基金赎回一般要多久到账', '答案': '货币市场基金通常T+1日到账，股票型基金、混合型基金、债券型基金一般为T+3日到账，QDII基金（境外投资基金）通常T+7日或更长时间到账', '参考相似问': ['我赎回基金后多久能到']}
 """
+
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
 
         res_messages = Message(role=ASSISTANT, content="")
@@ -95,21 +92,20 @@ class FAQAgent(Agent):
         print(f"embedding time: {time.time() - embedding_start}")
         # format prompt and call llm
 
-        messages = self._build_prompt(query, recall_res_list)
-        llm_res = self._call_llm(messages=messages)
-        faq_res = list(llm_res)[-1][0].content
-        if "```" in faq_res:
-            faq_res = rm_json_md(faq_res)
-        faq_json_res = {}
+        # messages = self._build_prompt(query, recall_res_list)
+        # llm_res = self._call_llm(messages=messages)
+        # faq_res = list(llm_res)[-1][0].content
+        # if "```" in faq_res:
+        #     faq_res = rm_json_md(faq_res)
+        # faq_json_res = {}
+        # try:
+        #     faq_json_res = json5.loads(faq_res)
+        # except Exception as e:
+        #     faq_json_res["faq"] = ""
+        #     raise ValueError(f"解析json失败: {faq_res}")
+        candidate_faq_dict = {index: a for index, a in enumerate(recall_res_list)}
         try:
-            faq_json_res = json5.loads(faq_res)
-        except Exception as e:
-            faq_json_res["faq"] = ""
-            raise ValueError(f"解析json失败: {faq_res}")
-        candidate_faq_dict = {index: a for index, a in enumerate(self.candidate_faq_str.strip().split("\n"))}
-        try:
-            res_messages.content = json.dumps([candidate_faq_dict[index - 1] for index in faq_json_res["faqs"]],
-                                               ensure_ascii=False)
+            res_messages.content = json.dumps(candidate_faq_dict, ensure_ascii=False)
         except KeyError:
             pass
         yield [res_messages]

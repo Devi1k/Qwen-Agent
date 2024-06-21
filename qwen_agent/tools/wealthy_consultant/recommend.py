@@ -1,11 +1,7 @@
-import json
 import os
 import random
-import re
-from typing import Dict, Optional, Union, List
-import faiss
-import json5
-import numpy as np
+from typing import Dict, Optional, Union
+
 import pandas as pd
 
 from qwen_agent.llm.schema import ToolCall, ToolResponse
@@ -72,14 +68,15 @@ class Recommend(BaseTool):
                 except KeyError:
                     pass
         tool_res = ToolCall(self.name, self.description, params, [])
-        if kwargs.get("flag", None): recommend_list = random.sample(self.df["基金简称"].tolist(), 5)
+        # if kwargs.get("flag", None): recommend_list = random.sample(self.df["基金简称"].tolist(), 5)
         if len(recommend_list) > 5:
-            recommend_res = {"推荐内容": random.sample(recommend_list, 5)}
+            recommend_res = [random.sample(recommend_list, 5)]
         elif len(recommend_list) != 0:
             recommend_res = list(recommend_list)
         else:
             return ToolResponse(reply="暂无相关产品推荐")
-        tool_res.observation = recommend_res
+        tool_res.observation = [candi for candi in self.df.to_dict(orient="records") if
+                                candi["基金简称"] in recommend_res]
         return ToolResponse("", tool_res)
 
     def _build_index(self):

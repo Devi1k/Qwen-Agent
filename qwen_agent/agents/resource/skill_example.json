@@ -1,62 +1,90 @@
 {
-    "帮我推荐一只低风险的科技基金": [
+    "产品查询": [
         {
-            "name": "产品推荐",
-            "parameters": {
-                "risk_level": "低风险",
-                "investment_sector": "科技"
-            }
-        }
-    ],
-    "葛兰管理的基金都有哪些": [
-        {
-            "name": "产品查询",
-            "parameters": {
-                "product_type": "基金",
-                "product_manager": "葛兰"
-            }
-        }
-    ],
-    "华安这个基金最近表现什么样": [
-        {
-            "name": "产品查询",
-            "parameters": {
-                "product_type": "基金",
-                "field_type": "收益查询",
-                "product_name": "华安"
-            }
-        }
-    ],
-    "请帮我比较一下中银和华安这两个产品": [
-        {
-            "name": "产品查询",
-            "parameters": {
-                "product_name": "华安,中银"
-            }
-        }
-    ],
-    "华安最近可以减持嘛": [
-        {
-            "name": "产品查询",
-            "parameters": {
-                "product_name": "华安",
-                "field_type": "加减仓市场分析"
-            }
-        }
-    ],
-    "推荐一只低风险的科技基金，并评测其信息": [
-        {
-            "name": "产品推荐",
-            "parameters": {
-                "risk_level": "低风险",
-                "investment_sector": "科技"
-            }
+            "input": "葛兰管理的基金都有哪些",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_type": "基金",
+                        "product_manager": "葛兰"
+                    }
+                }
+            ]
         },
         {
-            "name": "产品查询",
-            "parameters": {
-                "field_type": "产品评测"
-            }
+            "input": "华安这个基金最近表现什么样",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_name": "华安,中银"
+                    }
+                }
+            ]
+        },
+        {
+            "input": "请帮我比较一下中银和华安这两个产品",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_type": "基金",
+                        "product_manager": "葛兰"
+                    }
+                }
+            ]
+        },
+        {
+            "input": "华安最近可以加仓嘛",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_name": "华安",
+                        "field_type": "加减仓市场分析"
+                    }
+                }
+            ]
+        },
+        {
+            "input": "南方的测评怎么样",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_name": "南方",
+                        "field_type": "产品评测"
+                    }
+                }
+            ]
+        },
+        {
+            "input": "帮我推荐一下基金\nassistant: 以下是一些推荐的基金\n{\"基金名称\": \"易方达消费行业股票\", \"基金代码\": \"110022\"}\n{\"基金名称\": \"汇添富消费行业混合\", \"基金代码\": \"000083\"}\n{\"基金名称\": \"嘉实消费精选股票\", \"基金代码\": \"005621\"}\n{\"基金名称\": \"富国中证消费50ETF\", \"基金代码\": \"515650\"}\nuser: 富国和嘉实哪个收益好",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_type": "基金",
+                        "keywords": "嘉实消费精选股票,富国中证消费50ETF",
+                        "product_id": "005621,515650"
+                    }
+                }
+            ]
+        }
+    ],
+    "产品推荐": [
+        {
+            "input": "帮我推荐一只低风险的科技基金",
+            "output": [
+                {
+                    "name": "产品推荐",
+                    "parameters": {
+                        "risk_level": "低风险",
+                        "investment_sector": "科技"
+                    }
+                }
+            ]
         }
     ]
 }

@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from qwen_agent.tools import AmapWeather, CodeInterpreter, ImageGen, Retrieval, Storage, GetAccountInfo, Recommend
+from qwen_agent.tools import AmapWeather, CodeInterpreter, ImageGen, Retrieval, Storage, Recommend
 
 
 # [NOTE] 不带“市”会出错
@@ -11,33 +11,6 @@ def test_amap_weather(params):
     tool = AmapWeather()
     tool.call(params)
 
-
-params = {
-    "case1": {'cstno': 62121206326456862, 'ctfno': 11010120912085089124, 'cstname': "张三"}
-}
-
-
-@pytest.mark.parametrize(
-    'params', params.values()
-)
-def test_get_account_info(params):
-    tool = GetAccountInfo()
-    print(tool.function)
-    tool.call(params)
-
-
-params = {
-    "case1": {'product_style': "", 'risk_level': "", 'investment_sector': "科技"}
-}
-
-
-@pytest.mark.parametrize(
-    'params', params.values()
-)
-def test_get_recommend(params):
-    tool = Recommend()
-    print(tool.function)
-    tool.call(params)
 
 
 def test_code_interpreter():

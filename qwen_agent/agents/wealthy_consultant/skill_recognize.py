@@ -6,6 +6,7 @@ from typing import Dict, Iterator, List, Optional, Union
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
 from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, SYSTEM, USER, Session
+from qwen_agent.log import logger
 from qwen_agent.tools import BaseTool
 
 DEFAULT_NAME = 'Skill Recognizer'
@@ -19,11 +20,12 @@ PROMPT_TEMPLATE_ZH = """
 - format: json
 - json sample: 
 ```json
-{{
+{
     "thought": "",
     "function_call": []
-}}
+}
 ```
+
 
 ## Available_Functions :
 {function_info}
@@ -86,8 +88,9 @@ class SkillRecognizer(Agent):
         # for turn in kwargs["sessions"].turns[-3:]:
         #     history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
         cur_user_input = messages[-1][CONTENT][0].text
-        skill_message.append(Message(USER, history_str + "user:" + cur_user_input + "\n解析结果为：\n"))
-
+        skill_message.append(Message(USER, history_str + "## Input:\nuser:" + cur_user_input + "\n解析结果为：\n"))
+        logger.info("*" * 10)
+        logger.info(skill_message)
         # 调用大语言模型处理消息列表，并返回处理结果
         output_stream = self._call_llm(messages=skill_message)
         return output_stream
@@ -95,12 +98,12 @@ class SkillRecognizer(Agent):
     def _get_history(self, sessions: Session) -> str:
         history_str = "## History:\n"
         for turn in sessions.turns[-3:]:
-            # tool_res = "tool result:" + "\n"
-            # for t_r in turn.tool_res:
-            #     tool_res += t_r.tool_call.__str__() if t_r.tool_call is not None else t_r.reply + "\n"
-            history_str += ("user:\n" + turn.user_input + "\n" +
+            tool_res = "tool result:" + "\n"
+            for t_r in turn.tool_res:
+                tool_res += t_r.tool_call.__str__() if t_r.tool_call is not None else t_r.reply + "\n"
+            history_str += ("user:\n" + turn.user_input + "\n" + tool_res + "\n" +
                             "assistant:\n" + turn.assistant_output + "\n")
-            # tool_res +
+            #
         return history_str
 
     def _build_prompt(self, function_map: Dict[str, BaseTool], lang: str = 'zh', sessions: Session = None):
@@ -125,8 +128,11 @@ class SkillRecognizer(Agent):
         with open(os.path.join(ROOT_RESOURCE, 'skill_example.json'), 'r', encoding='utf-8') as f:
             example = json.load(f)
         example_str = ""
-        for user_input, call_fun in example.items():
-            example_str += "user: " + user_input + "\n" + "解析结果为: " + json.dumps(
-                {"thought": "xxxx", "function_call": call_fun},
-                ensure_ascii=False) + "\n"
+        count = 1
+        for func_name, examples in example.items():
+            for _ex in examples:
+                example_str += f"### Example {count}\n" + "user: " + _ex["input"] + "\n" + "解析结果为: " + json.dumps(
+                    [{"thought": "xxxx", "function_call": parse} for parse in _ex["output"]],
+                    ensure_ascii=False, indent=4) + "\n"
+                count += 1
         return example_str

@@ -49,7 +49,7 @@ class WealthyConsultant(Agent):
         faq_start = time.time()
         faq_res = list(self.faq_searcher.run(messages=messages, sessions=self.session, lang=lang))[-1][0].content
         turn.faq_res = faq_res
-        if faq_res != "[]":
+        if faq_res != "{}":
             yield [Message(role=ASSISTANT, content="```json\n" + faq_res[1:-1] + "\n```", name="FAQ")]
 
         print(f"faq cost :{time.time() - faq_start}")
@@ -130,9 +130,13 @@ class WealthyConsultant(Agent):
         if len(func["function_call"]) != 0:
             func_name, func_args = [], []
             func = func["function_call"]
-            for i in range(len(func)):
-                func_name.append(func[i]["name"])
-                func_args.append(func[i]["parameters"])
+            if isinstance(func, list):
+                for i in range(len(func)):
+                    func_name.append(func[i]["name"])
+                    func_args.append(func[i]["parameters"])
+            else:
+                func_name.append(func["name"])
+                func_args.append(func["parameters"])
         else:
             func_name, func_args = None, {}
         text = message.content
