@@ -4,8 +4,9 @@ from qwen_agent.tools import GetProductInfo
 
 params = {
     "case1": {
-        'product_name': "民生加银",
-        'field_type': "产品评测"
+        'product_name': "南方",
+        'field_type': "产品评测",
+        "product_type": "基金"
     },
     "case2": {
         'field_type': "加减仓市场分析",

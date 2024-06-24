@@ -155,12 +155,14 @@ class ToolResponse(BaseModelCompatibleDict):
         super().__init__(reply=reply, tool_call=tool_call, card=card)
 
 
+
+
 class Turn(BaseModelCompatibleDict):
     user_input: str
     assistant_output: Optional[str]
-    skill_rec: Optional[str] = None
+    skill_rec: Optional[Dict] = None
     tool_res: Optional[List[ToolResponse]] = None
-    faq_res: Optional[str] = None
+    faq_res: Optional[Dict] = None
 
     def __init__(self,
                  user_input: Optional[str] = None,
@@ -196,7 +198,7 @@ class Session:
             tool_res = "工具调用结果:" + "\n"
             for t_r in turn.tool_res:
                 tool_res += t_r.tool_call.__str__() if t_r.tool_call is not None else t_r.reply + "\n"
-            assistant_output = " assistant:" + turn.assistant_output + "\n"
+            assistant_output = "assistant:" + turn.assistant_output + "\n"
             history_str += user + tool_res + "\n" + assistant_output
         return history_str
 

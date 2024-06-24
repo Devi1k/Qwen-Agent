@@ -88,7 +88,7 @@ class SkillRecognizer(Agent):
         # for turn in kwargs["sessions"].turns[-3:]:
         #     history_str += "user:" + turn.user_input + "\n" + "assistant:" + turn.assistant_output + "\n"
         cur_user_input = messages[-1][CONTENT][0].text
-        skill_message.append(Message(USER, history_str + "## Input:\nuser:" + cur_user_input + "\n解析结果为：\n"))
+        skill_message.append(Message(USER, history_str + "## Input:\nuser:" + cur_user_input + "\n解析结果为:\n"))
         logger.info("*" * 10)
         logger.info(skill_message)
         # 调用大语言模型处理消息列表，并返回处理结果
@@ -131,7 +131,7 @@ class SkillRecognizer(Agent):
         count = 1
         for func_name, examples in example.items():
             for _ex in examples:
-                example_str += f"### Example {count}\n" + "user: " + _ex["input"] + "\n" + "解析结果为: " + json.dumps(
+                example_str += f"### Example {count}\n" + "user: " + _ex["input"] + "\n" + "解析结果为:\n" + json.dumps(
                     {"thought": "xxxx", "function_call": _ex["output"]},
                     ensure_ascii=False, indent=4) + "\n"
                 count += 1

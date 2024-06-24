@@ -4,6 +4,7 @@ from pprint import pprint
 from qwen_agent.agents import WealthyConsultant
 from qwen_agent.gui import WebUI
 
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 tool_llm_cfg = {
     'model': 'qwen1.5-14b-chat',
     'model_server': 'dashscope',

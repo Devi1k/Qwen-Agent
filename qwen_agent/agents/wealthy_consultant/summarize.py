@@ -1,4 +1,5 @@
 import copy
+import json
 from typing import Dict, Iterator, List, Optional, Union
 
 from qwen_agent import Agent
@@ -15,17 +16,13 @@ PROMPT_TEMPLATE_ZH = """
 - 你是中信银行的一个面向基金财富领域的助手小信。请参考以下的一些信息给出专业性回复建议
 
 
-##  History :
-{history}
-
 ##  Constrains :
-- kb_results为基金图谱的查询结果，包括基金、基金经理等具体信息
-- faqs为相关的问答库，请参考知识库的答案回复相关问题
-- function_calling_results为调用外部系统的执行结果，请参考return当中的结果
+- faqs 为相关的问答库，请参考知识库的答案回复相关问题
+- 请参考 observation 当中的结果作为调用外部系统的执行结果
 
-##  Reply :
-- 请结合History和Input当中的信息，分析用户的需求进行回复
-- [重要] 如果给到的信息提到了多个相似的产品名称，请先向用户进行澄清，并在回复结果中加上"您提到的xx可能存在多个产品，请选择"
+
+##  Content requirements:
+- 请结合 History 和 Input 当中的信息，分析用户的需求进行回复。如果 History 中提到了多个相似的产品名称，请向用户确认, 回复"您提到的xx可能存在多个产品，请选择: 1.xxxx 2.xxxx 3.xxxx ..."
 - 如果用户输入中表达了一些投资失败的一些负面情绪，要进行一定的安抚
 - 提到具体产品名称的时候，请加上产品代码
 - 在进行基金等推荐的时候，给出一些风险提示
@@ -48,9 +45,13 @@ def _build_prompt(messages: List[Message], sessions: Session = None, turn: Turn 
     # 对示例字符串进行预处理，准备插入到模板中的内容
     # example_str = self._example_preprocess()
     history_str = sessions.get_whole_history()
-    cur_turn_info = "当前轮次信息：\n" + turn.__str__()
-    cur_user_input = messages[-1][CONTENT][0].text
-    return Message(USER, history_str + "\n" + cur_turn_info + "\n## Input:" + cur_user_input + "\n解析结果为：\n")
+    cur_turn_info = "工具识别结果:\n" + json.dumps(turn.skill_rec, ensure_ascii=False,
+                                                   indent=4) + "\n工具调用结果:\n" + "\n".join(
+        [tool_res.tool_call.__str__() for tool_res in turn.tool_res]) + "\n" + "faqs:\n" + json.dumps(turn.faq_res,
+                                                                                                     ensure_ascii=False,
+                                                                                                     indent=4)
+    cur_user_input = messages[-1][CONTENT][0].text + "\n"
+    return Message(USER, history_str + "\n" + "\n## Input:\nuser:" + cur_user_input + cur_turn_info + "\n## Reply:\n")
 
 
 class Summarizer(Agent):

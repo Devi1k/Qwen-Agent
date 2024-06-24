@@ -13,7 +13,7 @@ def test_faq_agent():
     messages = [{
         'role': 'user',
         'content': [{
-            'text': '华宝新兴最近能加仓吗'
+            'text': '民生加银的测评怎么样'
         }]
     }]
     for rsp in agent.run(messages, function_map=agent.function_map, sessions=Session(turns=[])):

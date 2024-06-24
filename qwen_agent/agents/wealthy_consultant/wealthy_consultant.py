@@ -1,3 +1,4 @@
+import json
 import os
 import time
 from typing import Any
@@ -48,7 +49,11 @@ class WealthyConsultant(Agent):
 
         faq_start = time.time()
         faq_res = list(self.faq_searcher.run(messages=messages, sessions=self.session, lang=lang))[-1][0].content
-        turn.faq_res = faq_res
+        try:
+            turn.faq_res = json5.loads(faq_res)
+        except KeyError:
+            turn.faq_res = faq_res
+
         if faq_res != "{}":
             yield [Message(role=ASSISTANT, content="```json\n" + faq_res[1:-1] + "\n```", name="FAQ")]
 
@@ -60,10 +65,14 @@ class WealthyConsultant(Agent):
         skill_res = list(self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
                                             lang=lang))[-1][0]
         skill_res_text = rm_json_md(skill_res.content)
+        try:
+            turn.skill_rec = json5.loads(skill_res_text)
+        except Exception:
+            turn.skill_rec = skill_res_text
+
         if "```" not in skill_res_text: skill_res_text = "```json\n" + skill_res_text + "\n```"
         for rsp in stream_string_by_chunk(skill_res_text):
             yield [Message(role=ASSISTANT, content=rsp, name="Skill Recognize")]
-        turn.skill_rec = skill_res_text
         print(f"skill cost :{time.time() - skill_start}")
 
         # detect and call tools

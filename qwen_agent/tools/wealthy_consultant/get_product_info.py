@@ -136,9 +136,9 @@ PROMPT_TEMPLATE = {
 
 def _build_clarify_prompt(user_input: str, candidate_prd: List[Dict], user_product: Dict) -> List[Message]:
     candidate_prd_str = [json.dumps(c, ensure_ascii=False, indent=4) for c in candidate_prd]
-    clarify_content = ("相关基金信息：\n" + ",".join(candidate_prd_str) + "\n" +
-                       "用户持仓的基金：\n" + json.dumps(user_product, ensure_ascii=False, indent=4) + "\n" +
-                       "历史对话：\n" + user_input + "\n" + "实体链指结果：" + "\n")
+    clarify_content = ("相关基金信息:\n" + ",".join(candidate_prd_str) + "\n" +
+                       "用户持仓的基金:\n" + json.dumps(user_product, ensure_ascii=False, indent=4) + "\n" +
+                       "历史对话:\n" + user_input + "\n" + "实体链指结果：" + "\n")
     clarify_content_str = "## Input:\n" + clarify_content
     messages = [Message(**{"role": "user", "content": clarify_content_str})]
     messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE['zh']))
@@ -155,7 +155,7 @@ def _get_history(session: Session) -> str:
 
 @register_tool('产品查询')
 class GetProductInfo(BaseTool):
-    description = '基金/理财产品信息查询'
+    description = '查询基金/理财产品的详细信息，可以查询评测信息、加减仓建议、产品收益、风险等级等等内容'
     parameters = [{
         'name': 'product_type',
         'type': 'string',
@@ -169,11 +169,11 @@ class GetProductInfo(BaseTool):
     }, {
         'name': 'product_name',
         'type': 'string',
-        'description': '要查询的基金/理财等产品的名称，抽取字段'
+        'description': '要查询的基金/理财等产品的名称，请参考对话历史综合判断'
     }, {
         'name': 'product_id',
         'type': 'string',
-        'description': '要查询的基金/理财等产品的编码，抽取字段'
+        'description': '要查询的基金/理财等产品的产品代码，请参考对话历史综合判断'
     }, {
         'name': 'product_manager',
         'type': 'string',
