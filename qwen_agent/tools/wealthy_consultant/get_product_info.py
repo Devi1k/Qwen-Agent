@@ -10,6 +10,7 @@ import pandas as pd
 from qwen_agent.llm.schema import Message, ToolResponse, ToolCall, Session
 from qwen_agent.llm.schema import SYSTEM
 from qwen_agent.tools.base import BaseTool, register_tool
+from qwen_agent.utils.str_processing import process_param_list
 
 ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'agents/resource')
 
@@ -251,8 +252,7 @@ class GetProductInfo(BaseTool):
         # except KeyError:
         #     print(clarify_content)
         #     target_name_list = []
-        if isinstance(field_type, str):
-            field_type = field_type.split(",")
+        field_type = process_param_list(field_type)
         desire_fields = [ft if ft != "" and ft in self.parameters[1]["enums"] else "" for ft in field_type]
         query_field_list = self.default_field.copy()
         if desire_fields != "":
@@ -302,10 +302,8 @@ class GetProductInfo(BaseTool):
 
     def _get_candidate_prd(self, prd_name: str, prd_id: str) -> Tuple[List[Dict], List[Dict]]:
         candidate_prd = []
-        if isinstance(prd_name, list) or isinstance(prd_id, list):
-            prd_name_list, prd_id_list = prd_name, prd_id
-        else:
-            prd_name_list, prd_id_list = prd_name.split(","), prd_id.split(",")
+        prd_name_list = process_param_list(prd_name)
+        prd_id_list = process_param_list(prd_id)
 
         if len(prd_id_list) < len(prd_name_list):
             for i in range(len(prd_id_list), len(prd_name_list)): prd_id_list.append("")
@@ -323,7 +321,7 @@ class GetProductInfo(BaseTool):
                 score, prd_index = self.all_product_embedding.search(prd_name_embedding.astype(np.float32), k=5)
                 prd_index_res = prd_index[score > 0.6]
                 if len(prd_index_res) != 0:
-                    candidate_prd.append(self.all_product.iloc[prd_index_res].to_dict(orient="records")[0])
+                    candidate_prd.extend(self.all_product.iloc[prd_index_res].to_dict(orient="records"))
 
         desire_fields = ["基金简称", "基金编码"]
         matching_funds = [

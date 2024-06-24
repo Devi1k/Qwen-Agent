@@ -6,6 +6,7 @@ import pandas as pd
 
 from qwen_agent.llm.schema import ToolCall, ToolResponse
 from qwen_agent.tools.base import BaseTool, register_tool
+from qwen_agent.utils.str_processing import process_param_list
 
 ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'agents/resource')
 
@@ -45,9 +46,7 @@ class Recommend(BaseTool):
         recommend_list = set()
 
         def _get_recommend_list(param, param_index):
-            if isinstance(param, str):
-                param = param.replace("，", ",")
-                param = param.split(",")
+            param = process_param_list(param)
             if param:
                 for _para in param:
                     try:

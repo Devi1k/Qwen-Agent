@@ -4,7 +4,7 @@ from qwen_agent.tools import GetProductInfo
 
 params = {
     "case1": {
-        'product_name': "华安",
+        'product_name': "民生加银",
         'field_type': "产品评测"
     },
     "case2": {
@@ -19,5 +19,4 @@ params = {
 )
 def test_get_account_info(case):
     tool = GetProductInfo()
-    print(tool.function)
     print(tool.call(case))

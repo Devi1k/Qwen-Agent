@@ -1,4 +1,5 @@
 import re
+from typing import Any, List
 
 from qwen_agent.utils.utils import has_chinese_chars
 
@@ -61,3 +62,13 @@ def stream_string_by_chunk(s, chunk_size=6):
         tmp += s[i:i + chunk_size]
         res.append(tmp)
     return res
+
+
+def process_param_list(text: Any) -> List:
+    if isinstance(text, str):
+        if "，" in text: text = text.replace("，", ",")
+        return text.split(",")
+    elif isinstance(text, list):
+        return text
+    else:
+        raise ValueError(f"Invalid type for text: {text} {type(text)}")

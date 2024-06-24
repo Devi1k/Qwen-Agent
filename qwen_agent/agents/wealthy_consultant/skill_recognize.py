@@ -132,7 +132,7 @@ class SkillRecognizer(Agent):
         for func_name, examples in example.items():
             for _ex in examples:
                 example_str += f"### Example {count}\n" + "user: " + _ex["input"] + "\n" + "解析结果为: " + json.dumps(
-                    [{"thought": "xxxx", "function_call": parse} for parse in _ex["output"]],
+                    {"thought": "xxxx", "function_call": _ex["output"]},
                     ensure_ascii=False, indent=4) + "\n"
                 count += 1
         return example_str
