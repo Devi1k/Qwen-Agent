@@ -44,29 +44,22 @@ class Recommend(BaseTool):
             'investment_sector', "")
         recommend_list = set()
 
-        for ps in product_style.split(","):
-            if product_style.split(","):
-                try:
-                    for k in self.style_index[ps]:
-                        recommend_list.add(k)
-                except KeyError:
-                    pass
+        def _get_recommend_list(param, param_index):
+            if isinstance(param, str):
+                param = param.replace("，", ",")
+                param = param.split(",")
+            if param:
+                for _para in param:
+                    try:
+                        for k in param_index[_para]:
+                            recommend_list.add(k)
+                    except KeyError:
+                        pass
 
-        for r_l in risk_level.split(","):
-            if risk_level.split(","):
-                try:
-                    for k in self.risk_index[r_l]:
-                        recommend_list.add(k)
-                except KeyError:
-                    pass
+        _get_recommend_list(investment_sector, self.sector_index)
+        _get_recommend_list(product_style, self.style_index)
+        _get_recommend_list(risk_level, self.risk_index)
 
-        for i_s in investment_sector.split(","):
-            if investment_sector.split(","):
-                try:
-                    for k in self.sector_index[i_s]:
-                        recommend_list.add(k)
-                except KeyError:
-                    pass
         tool_res = ToolCall(self.name, self.description, params, [])
         # if kwargs.get("flag", None): recommend_list = random.sample(self.df["基金简称"].tolist(), 5)
         if len(recommend_list) > 5:
@@ -91,7 +84,7 @@ class Recommend(BaseTool):
 
         # 根据产品风格建立索引
         for index, row in df.iterrows():
-            styles = row['产品风格'].split(',')
+            styles = row['产品风格'].split('，')
             for style in styles:
                 if style not in style_index:
                     style_index[style] = []

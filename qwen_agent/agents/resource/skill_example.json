@@ -18,7 +18,8 @@
                 {
                     "name": "产品查询",
                     "parameters": {
-                        "product_name": "华安,中银"
+                        "product_type": "基金",
+                        "product_name": "华安"
                     }
                 }
             ]
@@ -29,8 +30,7 @@
                 {
                     "name": "产品查询",
                     "parameters": {
-                        "product_type": "基金",
-                        "product_manager": "葛兰"
+                        "product_name": "华安,中银"
                     }
                 }
             ]

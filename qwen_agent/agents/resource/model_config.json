@@ -8,7 +8,7 @@
         }
     },
     "tool_llm_cfg": {
-        "model": "qwen1.5-14b-chat",
+        "model": "qwen1.5-110b-chat",
         "model_server": "dashscope",
         "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160",
         "generate_cfg": {
