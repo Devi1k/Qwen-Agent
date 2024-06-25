@@ -4,7 +4,7 @@ from typing import Dict, Iterator, List, Optional, Union
 
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
-from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, SYSTEM, USER, Session, Turn
+from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, SYSTEM, Session, Turn, USER
 from qwen_agent.log import logger
 from qwen_agent.tools import BaseTool
 
@@ -47,9 +47,10 @@ def _build_prompt(messages: List[Message], sessions: Session = None, turn: Turn 
     history_str = sessions.get_whole_history()
     cur_turn_info = "工具识别结果:\n" + json.dumps(turn.skill_rec, ensure_ascii=False,
                                                    indent=4) + "\n工具调用结果:\n" + "\n".join(
-        [tool_res.tool_call.__str__() for tool_res in turn.tool_res]) + "\n" + "faqs:\n" + json.dumps(turn.faq_res,
-                                                                                                     ensure_ascii=False,
-                                                                                                     indent=4)
+        [tool_res.tool_call.__str__() if tool_res.tool_call is not None else tool_res.reply for tool_res in
+         turn.tool_res]) + "\n" + "faqs:\n" + json.dumps(turn.faq_res,
+                                                         ensure_ascii=False,
+                                                         indent=4)
     cur_user_input = messages[-1][CONTENT][0].text + "\n"
     return Message(USER, history_str + "\n" + "\n## Input:\nuser:" + cur_user_input + cur_turn_info + "\n## Reply:\n")
 
@@ -75,7 +76,7 @@ class Summarizer(Agent):
 
         messages = copy.deepcopy(messages)
 
-        final_messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
+        final_messages.insert(0, Message(SYSTEM, PROMPT_TEMPLATE["zh"] + "\n\n"))
 
         # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
         # history_str = ""

@@ -5,7 +5,7 @@ from typing import Dict, Iterator, List, Optional, Union
 
 from qwen_agent import Agent
 from qwen_agent.llm.base import BaseChatModel
-from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, SYSTEM, USER, Session
+from qwen_agent.llm.schema import CONTENT, DEFAULT_SYSTEM_MESSAGE, Message, SYSTEM, Session, USER
 from qwen_agent.log import logger
 from qwen_agent.tools import BaseTool
 
@@ -81,7 +81,7 @@ class SkillRecognizer(Agent):
         self._build_prompt(function_map=kwargs["function_map"])
         messages = copy.deepcopy(messages)
 
-        skill_message.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang]))
+        skill_message.insert(0, Message(SYSTEM, PROMPT_TEMPLATE[lang] + "\n\n"))
         # 构建对话历史字符串，包括最近最近三次用户和assistant的对话记录
         history_str = self._get_history(kwargs["sessions"])
         # history_str = ""

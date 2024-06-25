@@ -2,7 +2,7 @@ from typing import List, Literal, Optional, Tuple, Union, Dict
 
 from pydantic import BaseModel, field_validator, model_validator
 
-DEFAULT_SYSTEM_MESSAGE = 'You are a helpful assistant.'
+DEFAULT_SYSTEM_MESSAGE = ''
 
 ROLE = 'role'
 CONTENT = 'content'
