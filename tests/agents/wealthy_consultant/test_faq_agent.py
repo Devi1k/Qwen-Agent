@@ -12,7 +12,7 @@ def test_faq_agent():
     messages = [{
         'role': 'user',
         'content': [{
-            'text': '什么是 CPI'
+            'text': '华宝新兴最近能加仓吗'
         }]
     }]
     for rsp in agent.run(messages, full_article=True):

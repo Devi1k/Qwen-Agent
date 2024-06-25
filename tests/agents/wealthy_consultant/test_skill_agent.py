@@ -13,7 +13,7 @@ def test_faq_agent():
     messages = [{
         'role': 'user',
         'content': [{
-            'text': '五一旅游大火应该买什么基金'
+            'text': '评测一下新华安享'
         }]
     }]
     for rsp in agent.run(messages, function_map=agent.function_map, sessions=Session(turns=[])):

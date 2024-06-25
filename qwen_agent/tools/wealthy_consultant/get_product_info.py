@@ -220,38 +220,7 @@ class GetProductInfo(BaseTool):
         clarify_match, candidate_prd = self._get_candidate_prd(prd_name, prd_id)
         # get user product info from params
         user_product = {}
-
-        # build clarify content
-        # user_input = _get_history(kwargs.get("session", None)) + "user:" + kwargs["messages"][-1].content[0].text
-        # messages = _build_clarify_prompt(user_input=user_input,
-        #                                  candidate_prd=clarify_match, user_product=user_product)
-        # # call llm for deciding clarify
-        # clarify_llm_res = list(kwargs["llm"].chat(messages=messages))[-1][0].content
-        # if "```" in clarify_llm_res:
-        #     clarify_llm_res = rm_json_md(clarify_llm_res)
-        # try:
-        #     clarify_res = json5.loads(clarify_llm_res)
-        #     clarify_flag, clarify_content = clarify_res["是否需要澄清"] == "是", clarify_res["链接结果"]
-        # except Exception as e:
-        #     print(clarify_llm_res)
-        #     return ToolResponse(reply=clarify_llm_res)
-        # # if need clarify Splicing fixed template
-        # if len(clarify_res["链接结果"]) > 1 and clarify_flag:
-        #     if candidate_prd:
-        #         return ToolResponse("请您确定产品信息: \n" + json.dumps(candidate_prd, ensure_ascii=False, indent=4))
-        #     else:
-        #         clarify_res = self.recommend_tool.call(params={"product_style": "", "risk_level": "",
-        #                                                        "investment_sector": ""}, flag=True)
-        #         clarify_res.reply = "未找到相关产品，为您推荐以下产品",
-        #         return clarify_res
-        #     # else return product info field at least five fields
-        # else:
         # todo: 根据类型（基金/理财） + 名称区分
-        # try:
-        #     target_name_list = [cc["name"] for cc in clarify_content]
-        # except KeyError:
-        #     print(clarify_content)
-        #     target_name_list = []
         field_type = process_param_list(field_type)
         desire_fields = [ft if ft != "" and ft in self.parameters[1]["enums"] else "" for ft in field_type]
         query_field_list = self.default_field.copy()
@@ -319,9 +288,13 @@ class GetProductInfo(BaseTool):
             elif prd_name != "":
                 prd_name_embedding = self.embedding_model.encode(prd_name, normalize_embeddings=True).reshape(1, -1)
                 score, prd_index = self.all_product_embedding.search(prd_name_embedding.astype(np.float32), k=5)
-                prd_index_res = prd_index[score > 0.6]
-                if len(prd_index_res) != 0:
+                filter_score, prd_index_res = score[score > 0.6], prd_index[score > 0.6]
+                if filter_score[0] >= 1:
+                    candidate_prd.extend([self.all_product.iloc[prd_index_res[0]].to_dict()])
+                elif len(prd_index_res) != 0:
                     candidate_prd.extend(self.all_product.iloc[prd_index_res].to_dict(orient="records"))
+                else:
+                    pass
 
         desire_fields = ["基金简称", "基金编码"]
         matching_funds = [

@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import time
 from typing import Any
 from typing import Dict, Iterator, List, Optional, Union
@@ -50,33 +51,50 @@ class WealthyConsultant(Agent):
         faq_start = time.time()
         faq_res = list(self.faq_searcher.run(messages=messages, sessions=self.session, lang=lang))[-1][0].content
         try:
-            turn.faq_res = json5.loads(faq_res)
+            faq_res_json = json5.loads(faq_res)
         except KeyError:
-            turn.faq_res = faq_res
+            faq_res_json = faq_res
+        turn.faq_res = faq_res_json
 
-        if faq_res != "{}":
-            yield [Message(role=ASSISTANT, content="```json\n" + faq_res[1:-1] + "\n```", name="FAQ")]
+        if faq_res:
+            for _, f_r in faq_res_json.items():
+                if f_r["score"] > 0.8:
+                    yield [Message(role=ASSISTANT,
+                                   content="```json\n" + json.dumps({"标准问": f_r["标准问"], "答案": f_r["答案"]},
+                                                                    ensure_ascii=False,
+                                                                    indent=4) + "\n```", name="FAQ")]
 
         print(f"faq cost :{time.time() - faq_start}")
 
         # call skill recognizer
         yield [Message(role=ASSISTANT, content="[DEBUG]正在识别工具...")]
         skill_start = time.time()
-        skill_res = list(self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
-                                            lang=lang))[-1][0]
-        skill_res_text = rm_json_md(skill_res.content)
-        try:
-            turn.skill_rec = json5.loads(skill_res_text)
-        except Exception:
-            turn.skill_rec = skill_res_text
 
-        if "```" not in skill_res_text: skill_res_text = "```json\n" + skill_res_text + "\n```"
-        for rsp in stream_string_by_chunk(skill_res_text):
-            yield [Message(role=ASSISTANT, content=rsp, name="Skill Recognize")]
+        skill_response = []
+        thought_pattern = r'"thought":\s*"([^"]+)"'
+        yield_flag = False
+        for rsp in self.skill_rec.run(messages=messages, sessions=self.session, function_map=self.function_map,
+                                      lang=lang):
+            skill_response += rsp
+            matches = re.findall(thought_pattern, rsp[0].content)
+            if matches:
+                if not yield_flag: yield [Message(role=ASSISTANT, content=matches[0], name="Skill Recognize")]
+                yield_flag = True
+
+        skill_res_text = rm_json_md(skill_response[-1].content)
+        try:
+            skill_res_text = json5.loads(skill_res_text)
+        except Exception:
+            pass
+        turn.skill_rec = skill_res_text
+        if not yield_flag:
+            skill_res_text = "```json\n" + skill_res_text + "\n```"
+            for rsp in stream_string_by_chunk(skill_res_text):
+                yield [Message(role=ASSISTANT, content=rsp, name="Skill Recognize")]
         print(f"skill cost :{time.time() - skill_start}")
 
         # detect and call tools
-        use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res)
+        use_tool, tool_name, tool_args, _ = self._detect_tool(skill_res_text)
         tool_start = time.time()
         tool_response = ToolResponse(reply="", tool_call=None)
         tool_response_list = []
@@ -121,24 +139,18 @@ class WealthyConsultant(Agent):
         Returns:
             Need to call tool or not, tool name, tool args, text replies.
         """
-        # if isinstance(message, dict):
-        #     if "function_call" in message:
-        #         # todo: process multi function calls
-        #         func = message["function_call"][0]
-        #         message = Message(
-        #             function_call=FunctionCall(name=func["name"], arguments=json.dumps(func["parameters"])),
-        #             role="assistant", content="")
-        content = message.content
-        if "```" in content:
-            content = rm_json_md(content)
-        func = {"function_call": [{"name": None, "parameters": None}]}
-        try:
-            func = json5.loads(rm_json_md(content))
-        except Exception as e:
-            print(f"解析json失败: {e} {content}")
-        if len(func["function_call"]) != 0:
+        # content = message.content
+        # if "```" in content:
+        #     content = rm_json_md(content)
+        # func = {"function_call": [{"name": None, "parameters": None}]}
+        # try:
+        #     func = json5.loads(rm_json_md(content))
+        # except Exception as e:
+        #     print(f"解析json失败: {e} {content}")
+
+        if "function_call" in message and len(message["function_call"]) != 0:
             func_name, func_args = [], []
-            func = func["function_call"]
+            func = message["function_call"]
             if isinstance(func, list):
                 for i in range(len(func)):
                     func_name.append(func[i]["name"])
@@ -148,8 +160,8 @@ class WealthyConsultant(Agent):
                 func_args.append(func["parameters"])
         else:
             func_name, func_args = None, {}
-        text = message.content
-        if not text:
-            text = ''
+        # text = message.content
+        # if not text:
+        #     text = ''
 
-        return (func_name is not None), func_name, func_args, text
+        return (func_name is not None), func_name, func_args, ""

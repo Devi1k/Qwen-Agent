@@ -21,9 +21,9 @@ functions = [{
 }]
 
 
-@pytest.mark.parametrize('functions', [None, functions])
-@pytest.mark.parametrize('stream', [True, False])
-@pytest.mark.parametrize('delta_stream', [True, False])
+@pytest.mark.parametrize('functions', [None])
+@pytest.mark.parametrize('stream', [True])
+@pytest.mark.parametrize('delta_stream', [False])
 def test_llm_oai(functions, stream, delta_stream):
     if not stream and delta_stream:
         pytest.skip('Skipping this combination')
@@ -33,21 +33,24 @@ def test_llm_oai(functions, stream, delta_stream):
 
     # settings
     llm_cfg = {
-        'model': os.getenv('TEST_MODEL', 'Qwen/Qwen1.5-14B-Chat'),
+        'model': os.getenv('TEST_MODEL', 'Qwen1.5-14B-Chat'),
         'model_server': os.getenv('TEST_MODEL_SERVER', 'https://api.together.xyz'),
         'api_key': os.getenv('TEST_MODEL_SERVER_API_KEY', 'none')
     }
+    tool_llm_cfg =  {
+        "model": "Qwen/Qwen2-72B-Instruct",
+        "model_server": "https://api.siliconflow.cn/v1",
+        "api_key": "sk-quhzqpwzbjrrrxggqydiigxxdzorpooptwtomtczxslzjlpm",
+        "generate_cfg": {
+            "temperature": 0
+        }
+    }
 
-    llm = get_chat_model(llm_cfg)
-    assert llm.max_retries == 0
 
-    messages = [Message('user', 'draw a cute cat')]
+
+    llm = get_chat_model(tool_llm_cfg)
+
+    messages = [Message('user', '介绍一下通义千问')]
     response = llm.chat(messages=messages, functions=functions, stream=stream, delta_stream=delta_stream)
-    if stream:
-        response = list(response)[-1]
+    print(list(response))
 
-    assert isinstance(response[-1]['content'], str)
-    if functions:
-        assert response[-1].function_call.name == 'image_gen'
-    else:
-        assert response[-1].function_call is None

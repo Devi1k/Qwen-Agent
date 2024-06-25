@@ -1,16 +1,16 @@
 {
     "summarize_llm_cfg": {
-        "model": "qwen1.5-110b-chat",
-        "model_server": "dashscope",
-        "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160",
+        "model": "Qwen/Qwen2-72B-Instruct",
+        "model_server": "https://api.siliconflow.cn/v1",
+        "api_key": "sk-quhzqpwzbjrrrxggqydiigxxdzorpooptwtomtczxslzjlpm",
         "generate_cfg": {
             "temperature": 0.7
         }
     },
     "tool_llm_cfg": {
-        "model": "qwen1.5-14b-chat",
-        "model_server": "dashscope",
-        "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160",
+        "model": "Qwen/Qwen2-7B-Instruct",
+        "model_server": "https://api.siliconflow.cn/v1",
+        "api_key": "sk-quhzqpwzbjrrrxggqydiigxxdzorpooptwtomtczxslzjlpm",
         "generate_cfg": {
             "temperature": 0
         }

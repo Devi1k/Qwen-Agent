@@ -1,9 +1,8 @@
-import json
 import os
 import re
 from typing import Dict, Optional, Union, List
+
 import faiss
-import json5
 import numpy as np
 import pandas as pd
 
@@ -34,12 +33,20 @@ class GetFAQ(BaseTool):
         query = params['query']
         query_embedding = self.embedding_model.encode(query, normalize_embeddings=True).reshape(1, -1)
         score, prd_index = self.recall_embedding.search(query_embedding.astype(np.float32), k=5)
-        prd_index = prd_index[score > 0.6]
+        filter_score, prd_index = score[score > 0.6], prd_index[score > 0.6]
         if len(prd_index) != 0:
             candidate_query = self.recall_set.iloc[prd_index]["query"].tolist()
             deduplicate_standard_query = list(set([self.standard_similar_mapping[c] for c in candidate_query]))
+
             filter_faq = self.origin_data[self.origin_data["标准问"].isin(deduplicate_standard_query)].to_dict(
                 orient="records")
+            for c_q, f_s in zip(candidate_query[::-1], np.flip(filter_score)):
+                for ff in filter_faq:
+                    ff["score"] = 0
+                    if c_q in ff["相似问"] or c_q == ff["标准问"]:
+                        ff["score"] = float(f_s)
+                        break
+
             return filter_faq
         else:
             return []
