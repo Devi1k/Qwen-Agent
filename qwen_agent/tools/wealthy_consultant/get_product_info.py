@@ -155,7 +155,7 @@ def _get_history(session: Session) -> str:
 
 @register_tool('产品查询')
 class GetProductInfo(BaseTool):
-    description = '查询基金/理财产品的详细信息，可以查询评测信息、加减仓建议、产品收益、风险等级等等内容'
+    description = '查询基金/理财产品的详细信息，例如产品的评测信息、加减仓建议、产品收益、风险等级等方面'
     parameters = [{
         'name': 'product_type',
         'type': 'string',
