@@ -5,21 +5,22 @@ from qwen_agent.agents import WealthyConsultant
 from qwen_agent.gui import WebUI
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
-tool_llm_cfg = {
-    'model': 'qwen1.5-14b-chat',
-    'model_server': 'dashscope',
-    "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160",
-    'generate_cfg': {
-        'temperature': 0.01
-    }
-}
+RESOURCE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "qwen_agent/resource")
+
+# tool_llm_cfg = {
+#     'model': 'qwen1.5-14b-chat',
+#     'model_server': 'dashscope',
+#     "api_key": "sk-22a3f18de8c840d79d3d16f821c9a160",
+#     'generate_cfg': {
+#         'temperature': 0.01
+#     }
+# }
 
 tool_list = ["产品查询", "产品推荐"]
 
 
 def wealthy_consultant():
-    bot = WealthyConsultant(llm=tool_llm_cfg,
-                            name="财顾小信",
+    bot = WealthyConsultant(name="财顾小信",
                             description="我是一个财富顾问，我能了解你的投资情况，帮你分析当下市场状况、产品信息。",
                             function_list=tool_list)
 
@@ -33,8 +34,7 @@ def wealthy_consultant():
 
 
 def app_gui():
-    bot = WealthyConsultant(llm=tool_llm_cfg,
-                            name="财顾小信",
+    bot = WealthyConsultant(name="财顾小信",
                             description="我是一个财富顾问，我能了解你的投资情况，帮你分析当下市场状况、产品信息。",
                             function_list=tool_list)
     chatbot_config = {

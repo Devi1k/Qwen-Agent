@@ -35,11 +35,16 @@ class WealthyConsultant(Agent):
                          system_message=system_message,
                          name=name,
                          description=description)
-        self.skill_rec = SkillRecognizer(llm=self.llm)
+        with open(os.path.join(RESOURCE_PATH, "model_config.json"), "r", encoding="utf-8") as fp:
+            model_config = json.load(fp)
+            tool_llm_cfg = model_config["tool_llm_cfg"]
+            summarize_llm_cfg = model_config["summarize_llm_cfg"]
+
+        self.skill_rec = SkillRecognizer(llm=tool_llm_cfg)
         self.session = Session(turns=[])
 
-        self.summarizer = Summarizer(llm=self.llm)
-        self.faq_searcher = FAQAgent(function_list=["faq_embedding"], llm=llm)
+        self.summarizer = Summarizer(llm=summarize_llm_cfg)
+        self.faq_searcher = FAQAgent(function_list=["faq_embedding"])
 
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
         if messages[-1].content[0].text.strip() == '':
