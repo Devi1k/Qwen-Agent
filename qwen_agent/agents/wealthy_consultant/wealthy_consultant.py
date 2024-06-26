@@ -60,9 +60,11 @@ class WealthyConsultant(Agent):
             for _, f_r in faq_res_json.items():
                 if f_r["score"] > 0.8:
                     yield [Message(role=ASSISTANT,
-                                   content="```json\n" + json.dumps({"标准问": f_r["标准问"], "答案": f_r["答案"]},
-                                                                    ensure_ascii=False,
-                                                                    indent=4) + "\n```", name="FAQ")]
+                                   content="```json\n" + json.dumps(
+                                       {"标准问": f_r["标准问"], "答案": f_r["答案"],
+                                        "相似性": round(f_r["score"], 2) * 100},
+                                       ensure_ascii=False,
+                                       indent=4) + "\n```", name="FAQ")]
 
         print(f"faq cost :{time.time() - faq_start}")
 

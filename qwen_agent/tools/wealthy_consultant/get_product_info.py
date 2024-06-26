@@ -289,7 +289,7 @@ class GetProductInfo(BaseTool):
                 prd_name_embedding = self.embedding_model.encode(prd_name, normalize_embeddings=True).reshape(1, -1)
                 score, prd_index = self.all_product_embedding.search(prd_name_embedding.astype(np.float32), k=5)
                 filter_score, prd_index_res = score[score > 0.6], prd_index[score > 0.6]
-                if filter_score[0] >= 1:
+                if filter_score[0] > 0.99:
                     candidate_prd.extend([self.all_product.iloc[prd_index_res[0]].to_dict()])
                 elif len(prd_index_res) != 0:
                     candidate_prd.extend(self.all_product.iloc[prd_index_res].to_dict(orient="records"))

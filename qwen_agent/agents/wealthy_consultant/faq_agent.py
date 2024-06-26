@@ -90,19 +90,6 @@ class FAQAgent(Agent):
         except Exception as e:
             raise ValueError(f"搜索调用失败: {e}")
         print(f"embedding time: {time.time() - embedding_start}")
-        # format prompt and call llm
-
-        # messages = self._build_prompt(query, recall_res_list)
-        # llm_res = self._call_llm(messages=messages)
-        # faq_res = list(llm_res)[-1][0].content
-        # if "```" in faq_res:
-        #     faq_res = rm_json_md(faq_res)
-        # faq_json_res = {}
-        # try:
-        #     faq_json_res = json5.loads(faq_res)
-        # except Exception as e:
-        #     faq_json_res["faq"] = ""
-        #     raise ValueError(f"解析json失败: {faq_res}")
         candidate_faq_dict = {index: a for index, a in enumerate(recall_res_list)}
         try:
             res_messages.content = json.dumps(candidate_faq_dict, ensure_ascii=False)
