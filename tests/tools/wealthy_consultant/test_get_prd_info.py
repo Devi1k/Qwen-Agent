@@ -17,7 +17,7 @@ params = {
     #     "product_type": "基金"
     # },
     "case4": {
-        "product_name": "中银收益混合A,汇添富上证综合指数A"
+        "product_name": "中银收益混合A,华夏先进制造龙头混合A"
     }
 }
 
