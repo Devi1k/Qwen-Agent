@@ -4,13 +4,21 @@
         "model_server": "https://api.siliconflow.cn/v1",
         "api_key": "sk-quhzqpwzbjrrrxggqydiigxxdzorpooptwtomtczxslzjlpm",
         "generate_cfg": {
-            "temperature": 0.7
+            "temperature": 0.4
+        }
+    },
+    "summarize_llm_ali_cfg": {
+        "model": "qwen2-72b-instruct",
+        "model_server": "dashscope",
+        "api_key": "sk-90a505ade0184c4bb9f854fd65889bf6",
+        "generate_cfg": {
+            "temperature": 0
         }
     },
     "tool_llm_cfg": {
-        "model": "Qwen/Qwen2-7B-Instruct",
-        "model_server": "https://api.siliconflow.cn/v1",
-        "api_key": "sk-quhzqpwzbjrrrxggqydiigxxdzorpooptwtomtczxslzjlpm",
+        "model": "qwen2-7b-instruct",
+        "model_server": "dashscope",
+        "api_key": "sk-90a505ade0184c4bb9f854fd65889bf6",
         "generate_cfg": {
             "temperature": 0
         }

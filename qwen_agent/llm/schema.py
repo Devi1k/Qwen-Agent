@@ -195,11 +195,11 @@ class Session:
         for turn in self.turns[-3:]:
             user = "user:" + turn.user_input + "\n"
             # faq_res = "faq result:\n" + turn.faq_res + "\n"
-            tool_res = "工具调用结果:" + "\n"
-            for t_r in turn.tool_res:
-                tool_res += t_r.tool_call.__str__() if t_r.tool_call is not None else t_r.reply + "\n"
+            # tool_res = "工具调用结果:" + "\n"
+            # for t_r in turn.tool_res:
+            #     tool_res += t_r.tool_call.__str__() if t_r.tool_call is not None else t_r.reply + "\n"
             assistant_output = "assistant:" + turn.assistant_output + "\n"
-            history_str += user + tool_res + "\n" + assistant_output
+            history_str += user + "\n" + assistant_output
         return history_str
 
     def __repr__(self):

@@ -16,7 +16,7 @@ RESOURCE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__f
 #     }
 # }
 
-tool_list = ["产品查询", "产品推荐"]
+tool_list = ["产品查询", "产品推荐", "持仓查询", "提交订单"]
 
 
 def wealthy_consultant():
@@ -54,6 +54,6 @@ def app_gui():
 
 
 if __name__ == '__main__':
-    wealthy_consultant()
-    # os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
-    # app_gui()
+    # wealthy_consultant()
+    os.environ["no_proxy"] = "localhost,127.0.0.1,::1"
+    app_gui()

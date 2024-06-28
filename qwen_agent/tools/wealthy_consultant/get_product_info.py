@@ -155,29 +155,29 @@ def _get_history(session: Session) -> str:
 
 @register_tool('产品查询')
 class GetProductInfo(BaseTool):
-    description = '查询基金/理财产品的详细信息，例如产品的评测信息、加减仓建议、产品收益、风险等级等方面'
+    description = '该工具用于查询基金/理财产品的详细信息，例如产品的评测信息、加减仓建议、产品收益、风险等级等方面'
     parameters = [{
         'name': 'product_type',
         'type': 'string',
-        'description': '要推荐的内容类型，必须为enums当中定义的产品类型',
+        'description': '查询产品的内容类型，必须为enums当中定义的产品类型',
         'enums': ['基金', '理财']
     }, {
         'name': 'field_type',
         'type': 'string',
-        'description': '要推荐的字段类型，必须为enums当中定义的字段类型，没有提到则为空',
+        'description': '查询产品的字段类型，必须为enums当中定义的字段类型，没有提到则为空',
         'enums': ['产品评测', '加减仓市场分析']
     }, {
         'name': 'product_name',
         'type': 'string',
-        'description': '要查询的基金/理财等产品的名称，请参考对话历史综合判断'
+        'description': '查询产品的基金/理财等产品的名称，请参考对话历史综合判断'
     }, {
         'name': 'product_id',
         'type': 'string',
-        'description': '要查询的基金/理财等产品的产品代码，请参考对话历史综合判断'
+        'description': '查询产品的基金/理财等产品的产品代码，请参考对话历史综合判断'
     }, {
         'name': 'product_manager',
         'type': 'string',
-        'description': '要查询的基金/理财经理的人名，抽取字段'
+        'description': '查询产品的基金/理财经理的人名，抽取字段'
     }]
 
     def __init__(self, cfg: Optional[Dict] = None):
@@ -289,12 +289,12 @@ class GetProductInfo(BaseTool):
                 prd_name_embedding = self.embedding_model.encode(prd_name, normalize_embeddings=True).reshape(1, -1)
                 score, prd_index = self.all_product_embedding.search(prd_name_embedding.astype(np.float32), k=5)
                 filter_score, prd_index_res = score[score > 0.6], prd_index[score > 0.6]
-                if filter_score[0] > 0.99:
-                    candidate_prd.extend([self.all_product.iloc[prd_index_res[0]].to_dict()])
-                elif len(prd_index_res) != 0:
-                    candidate_prd.extend(self.all_product.iloc[prd_index_res].to_dict(orient="records"))
-                else:
-                    pass
+
+                if len(prd_index_res) != 0:
+                    if filter_score[0] > 0.99:
+                        candidate_prd.extend([self.all_product.iloc[prd_index_res[0]].to_dict()])
+                    else:
+                        candidate_prd.extend(self.all_product.iloc[prd_index_res].to_dict(orient="records"))
 
         desire_fields = ["基金简称", "基金编码"]
         matching_funds = [

@@ -3,7 +3,6 @@ import random
 from typing import Dict, Optional, Union
 
 import pandas as pd
-
 from qwen_agent.llm.schema import ToolCall, ToolResponse
 from qwen_agent.tools.base import BaseTool, register_tool
 from qwen_agent.utils.str_processing import process_param_list
@@ -13,7 +12,7 @@ ROOT_RESOURCE = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__f
 
 @register_tool('产品推荐')
 class Recommend(BaseTool):
-    description = '调用理财/产品推荐系统'
+    description = '该工具用于根据推荐条件推荐相关产品'
     parameters = [{
         'name': 'product_style',
         'type': 'string',
@@ -67,8 +66,12 @@ class Recommend(BaseTool):
             recommend_res = list(recommend_list)
         else:
             return ToolResponse(reply="暂无相关产品推荐")
-        tool_res.observation = [candi for candi in self.df.to_dict(orient="records") if
-                                candi["基金简称"] in recommend_res]
+
+        default_fields = ["基金简称", "基金编码", "产品风格", "基金风险等级", "投资板块"]
+        observation = [{field: candi[field] for field in default_fields if field in candi} for candi in
+                       self.df.to_dict(orient="records") if
+                       candi["基金简称"] in recommend_res]
+        tool_res.observation = [{"reply": "为您推荐以下产品", "推荐数量": len(recommend_res),"推荐列表": observation}]
         return ToolResponse("", tool_res)
 
     def _build_index(self):

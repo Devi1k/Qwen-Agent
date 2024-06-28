@@ -38,7 +38,7 @@ class WealthyConsultant(Agent):
         with open(os.path.join(RESOURCE_PATH, "model_config.json"), "r", encoding="utf-8") as fp:
             model_config = json.load(fp)
             tool_llm_cfg = model_config["tool_llm_cfg"]
-            summarize_llm_cfg = model_config["summarize_llm_cfg"]
+            summarize_llm_cfg = model_config["summarize_llm_ali_cfg"]
 
         self.skill_rec = SkillRecognizer(llm=tool_llm_cfg)
         self.session = Session(turns=[])
@@ -51,7 +51,7 @@ class WealthyConsultant(Agent):
             raise ValueError("请输入有关信息")
         # New Turn, add user message to session
         turn = Turn(user_input=messages[-1].content[0].text)
-        yield [Message(role=ASSISTANT, content="[DEBUG]正在识别已有 FAQ ...")]
+        yield [Message(role=ASSISTANT, content="[DEBUG]正在查找相关 FAQ 问题 ...")]
 
         faq_start = time.time()
         faq_res = list(self.faq_searcher.run(messages=messages, sessions=self.session, lang=lang))[-1][0].content
@@ -74,7 +74,7 @@ class WealthyConsultant(Agent):
         print(f"faq cost :{time.time() - faq_start}")
 
         # call skill recognizer
-        yield [Message(role=ASSISTANT, content="[DEBUG]正在识别工具...")]
+        yield [Message(role=ASSISTANT, content="[DEBUG]收到问题，正在思考...")]
         skill_start = time.time()
 
         skill_response = []

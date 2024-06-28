@@ -47,6 +47,33 @@
                     }
                 }
             ]
+        },
+        {
+            "input": "介绍一下华安消费\nassistant: 华安消费行业混合(000083)是一款……\nuser: 最近可以加仓嘛",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_type": "基金",
+                        "product_name": "华安消费行业混合",
+                        "field_type": "加减仓市场分析",
+                        "product_id": "000083"
+                    }
+                }
+            ]
+        },{
+            "input": "现在买会不会追高后面跌了",
+            "output": [
+                {
+                    "name": "产品查询",
+                    "parameters": {
+                        "product_type": "",
+                        "product_name": "",
+                        "field_type": "加减仓市场分析",
+                        "product_id": ""
+                    }
+                }
+            ]
         }
     ],
     "产品推荐": [
@@ -58,6 +85,20 @@
                     "parameters": {
                         "risk_level": "低风险",
                         "investment_sector": "科技"
+                    }
+                }
+            ]
+        }
+    ],
+    "提交订单": [
+        {
+            "input": "再买100块钱南方大数据100指数A",
+            "output": [
+                {
+                    "name": "提交订单",
+                    "parameters": {
+                        "product_name": "南方大数据100指数A",
+                        "purchase_share": "100"
                     }
                 }
             ]
