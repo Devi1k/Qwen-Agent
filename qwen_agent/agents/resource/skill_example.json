@@ -61,16 +61,17 @@
                     }
                 }
             ]
-        },{
-            "input": "现在买会不会追高后面跌了",
+        },
+        {
+            "input": "第二个产品靠谱吗\nassistant:\n南方浩睿进取京选3个月持有混合(11696)是一款偏成长风格的基金……user:这款基金收益确实不错，你说我现在买会不会追高了后面跌了",
             "output": [
                 {
                     "name": "产品查询",
                     "parameters": {
-                        "product_type": "",
-                        "product_name": "",
+                        "product_type": "基金",
+                        "product_name": "南方浩睿进取京选3个月持有混合",
                         "field_type": "加减仓市场分析",
-                        "product_id": ""
+                        "product_id": "11696"
                     }
                 }
             ]
