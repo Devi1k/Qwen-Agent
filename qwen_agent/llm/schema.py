@@ -155,8 +155,6 @@ class ToolResponse(BaseModelCompatibleDict):
         super().__init__(reply=reply, tool_call=tool_call, card=card)
 
 
-
-
 class Turn(BaseModelCompatibleDict):
     user_input: str
     assistant_output: Optional[str]
@@ -201,6 +199,9 @@ class Session:
             assistant_output = "assistant:" + turn.assistant_output + "\n"
             history_str += user + "\n" + assistant_output
         return history_str
+
+    def clear_history(self):
+        self.turns = []
 
     def __repr__(self):
         return [f"turn {index + 1}:" + turn.__str__() + "\n" for index, turn in enumerate(self.turns)]

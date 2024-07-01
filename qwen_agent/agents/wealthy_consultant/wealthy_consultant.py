@@ -49,6 +49,10 @@ class WealthyConsultant(Agent):
     def _run(self, messages: List[Message], lang: str = 'zh', **kwargs) -> Iterator[List[Message]]:
         if messages[-1].content[0].text.strip() == '':
             raise ValueError("请输入有关信息")
+        if messages[-1].content[0].text.strip() == '清空历史':
+            self.session.clear_history()
+            yield [Message(role=ASSISTANT, content="[DEBUG]历史会话已清空")]
+            return
         # New Turn, add user message to session
         turn = Turn(user_input=messages[-1].content[0].text)
         yield [Message(role=ASSISTANT, content="[DEBUG]正在查找相关 FAQ 问题 ...")]
