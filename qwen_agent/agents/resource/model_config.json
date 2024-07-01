@@ -16,7 +16,7 @@
         }
     },
     "tool_llm_cfg": {
-        "model": "qwen2-7b-instruct",
+        "model": "qwen2-72b-instruct",
         "model_server": "dashscope",
         "api_key": "sk-90a505ade0184c4bb9f854fd65889bf6",
         "generate_cfg": {
