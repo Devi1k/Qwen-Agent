@@ -94,8 +94,8 @@ def test_llm_dashscope(stream):
 
     # setting
     llm_cfg = {'model': 'ERNIE-3.5-8K', 'model_server': 'qianfan',
-               "access_key": "ALTAKt7kVm6qg5eZQaOlVUR3l0",
-               "secret_key": "5a2e43049458416a83e51497d1ebdaef"}
+               "access_key": "",
+               "secret_key": ""}
 
     # Chat with text llm
     llm = get_chat_model(llm_cfg)

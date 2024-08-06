@@ -25,8 +25,8 @@ def call_with_messages():
 
 def call_qianfan():
     import os
-    os.environ["QIANFAN_ACCESS_KEY"] = "ALTAKt7kVm6qg5eZQaOlVUR3l0"
-    os.environ["QIANFAN_SECRET_KEY"] = "5a2e43049458416a83e51497d1ebdaef"
+    os.environ["QIANFAN_ACCESS_KEY"] = ""
+    os.environ["QIANFAN_SECRET_KEY"] = ""
 
     # 指定特定模型
     resp = qianfan.ChatCompletion().do(model="ERNIE-3.5-8K", messages=[{
