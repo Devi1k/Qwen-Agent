@@ -37,8 +37,8 @@ class WealthyConsultant(Agent):
                          description=description)
         with open(os.path.join(RESOURCE_PATH, "model_config.json"), "r", encoding="utf-8") as fp:
             model_config = json.load(fp)
-            tool_llm_cfg = model_config["tool_llm_cfg"]
-            summarize_llm_cfg = model_config["summarize_llm_ali_cfg"]
+            tool_llm_cfg = model_config["qianfan_tool"]
+            summarize_llm_cfg = model_config["qianfan_summarize"]
 
         self.skill_rec = SkillRecognizer(llm=tool_llm_cfg)
         self.session = Session(turns=[])

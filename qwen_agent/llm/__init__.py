@@ -1,8 +1,8 @@
 from typing import Dict, Optional
 
 from qwen_agent.llm.base import LLM_REGISTRY
-
 from .base import BaseChatModel, ModelServiceError
+from .ernie_qianfan import ErnieChatAtDS
 from .oai import TextChatAtOAI
 from .qwen_dashscope import QwenChatAtDS
 from .qwenvl_dashscope import QwenVLChatAtDS
@@ -54,6 +54,10 @@ def get_chat_model(cfg: Optional[Dict] = None) -> BaseChatModel:
         model_type = 'qwen_dashscope'
         return LLM_REGISTRY[model_type](cfg)
 
+    if 'ERNIE' in model:
+        model_type = "qianfan"
+        return LLM_REGISTRY[model_type](cfg)
+
     raise ValueError(f'Invalid model cfg: {cfg}')
 
 
@@ -62,6 +66,7 @@ __all__ = [
     'QwenChatAtDS',
     'TextChatAtOAI',
     'QwenVLChatAtDS',
+    'ErnieChatAtDS',
     'get_chat_model',
     'ModelServiceError',
 ]

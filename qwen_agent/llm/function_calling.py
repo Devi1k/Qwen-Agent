@@ -90,6 +90,7 @@ class BaseFnCallModel(BaseChatModel, ABC):
         functions: List[Dict],
         lang: Literal['en', 'zh'],
     ) -> List[Message]:
+        # todo: add tool example
         tool_desc_template = FN_CALL_TEMPLATE[lang]
         tool_descs = '\n\n'.join(get_function_description(function, lang=lang) for function in functions)
         tool_names = ','.join(function.get('name', function.get('name_for_model', '')) for function in functions)

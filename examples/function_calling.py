@@ -18,7 +18,13 @@ def get_current_weather(location, unit='fahrenheit'):
     else:
         return json.dumps({'location': location, 'temperature': 'unknown'})
 
+def get_product_info(product_type, field_type, product_name, product_id, product_manager):
+    """Get the product information"""
+    return json.dumps({'product_type': product_type, 'field_type': field_type, 'product_name': product_name, 'product_id': product_id, 'product_manager': product_manager})
 
+def recommend(product_style, risk_level, investment_sector):
+    """Recommend relevant products based on specified criteria"""
+    return json.dumps({'recommendation': 'Fund A, Fund B, Fund C'})
 def test():
     llm = get_chat_model({
         # Use the model service provided by DashScope:
@@ -38,7 +44,7 @@ def test():
     })
 
     # Step 1: send the conversation and available functions to the model
-    messages = [{'role': 'user', 'content': "What's the weather like in San Francisco?"}]
+    messages = [{'role': 'user', 'content': "查询安盈象这个产品，并推荐同风格基金"}]
     functions = [{
         'name': 'get_current_weather',
         'description': 'Get the current weather in a given location',
@@ -56,7 +62,60 @@ def test():
             },
             'required': ['location'],
         },
-    }]
+    },
+        {
+            'name': 'get_product_info',
+            'description': 'Get the product information',
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'product_type': {
+                        'type': 'string',
+                        'enum': ['基金', '理财'],
+                        'description': '基金/理财'
+                    },
+                    'field_type': {
+                        'type': 'string',
+                        'enum': ['产品评测', '加减仓市场分析'],
+                        'description': '产品评测/加减仓市场分析'
+                    },
+                    'product_name': {
+                        'type': 'string',
+                        'description': '基金/理财产品的名称'
+                    },
+                    'product_id': {
+                        'type': 'string',
+                        'description': '基金/理财产品的产品代码'
+                    },
+                    'product_manager': {
+                        'type': 'string',
+                    }
+                }
+            }
+        },{
+            'name': 'recommend',
+            'description': 'This tool is designed to recommend relevant products based on specified criteria.',
+            'parameters': {
+                'type': 'object',
+                'properties': {
+                    'product_style': {
+                        'type': 'string',
+                        'enum': ['均衡', '偏大盘', '中波动固收+', '偏中短债', '偏成长', '大小盘平衡', '偏中短债', '大小盘平衡 ',
+                                 '科技主题', '偏小盘', '医药主题', '大小盘平衡'],
+                        'description': '产品风格'
+                    },
+                    'risk_level': {
+                        'type': 'string',
+                        'enum': ['低风险', '中低风险', '中风险', '中高风险', '高风险'],
+                        'description': '风险等级'
+                    },
+                    'investment_sector': {
+                        'type': 'string',
+                        'enum': []
+                    }
+                }
+            }
+        }]
 
     print('# Assistant Response 1:')
     responses = []
@@ -73,7 +132,10 @@ def test():
         # Note: the JSON response may not always be valid; be sure to handle errors
         available_functions = {
             'get_current_weather': get_current_weather,
-        }  # only one function in this example, but you can have multiple
+            'get_product_info': get_product_info,
+            'recommend': recommend,
+        }
+        # only one function in this example, but you can have multiple
         function_name = last_response['function_call']['name']
         function_to_call = available_functions[function_name]
         function_args = json.loads(last_response['function_call']['arguments'])

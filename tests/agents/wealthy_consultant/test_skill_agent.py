@@ -2,13 +2,16 @@ from qwen_agent.agents import SkillRecognizer
 from qwen_agent.llm.schema import Session
 
 
-def test_faq_agent():
+def test_skill_agent():
     llm_cfg = {'model': 'qwen-max',
-               'api_key': 'sk-22a3f18de8c840d79d3d16f821c9a160',
+               'api_key': 'sk-90a505ade0184c4bb9f854fd65889bf6',
                'model_server': 'dashscope',
                'generate_cfg':
                    {'temperature': 0.1, 'top_p': 0.7, 'max_tokens': 1024}
                }
+    llm_cfg = {'model': 'ERNIE-3.5-8K', 'model_server': 'qianfan',
+               "access_key": "ALTAKt7kVm6qg5eZQaOlVUR3l0",
+               "secret_key": "5a2e43049458416a83e51497d1ebdaef"}
     agent = SkillRecognizer(llm=llm_cfg, function_list=["产品查询", "产品推荐", "持仓查询", "提交订单"])
     messages = [{
         'role': 'user',
