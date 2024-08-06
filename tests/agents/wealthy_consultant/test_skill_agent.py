@@ -10,8 +10,8 @@ def test_skill_agent():
                    {'temperature': 0.1, 'top_p': 0.7, 'max_tokens': 1024}
                }
     llm_cfg = {'model': 'ERNIE-3.5-8K', 'model_server': 'qianfan',
-               "access_key": "ALTAKt7kVm6qg5eZQaOlVUR3l0",
-               "secret_key": "5a2e43049458416a83e51497d1ebdaef"}
+               "access_key": "",
+               "secret_key": ""}
     agent = SkillRecognizer(llm=llm_cfg, function_list=["产品查询", "产品推荐", "持仓查询", "提交订单"])
     messages = [{
         'role': 'user',
